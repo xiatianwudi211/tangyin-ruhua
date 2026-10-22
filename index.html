@@ -1,0 +1,2705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>合乐图 · 唐音入画 · 中国古画中的民乐</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700&family=Cormorant+Garamond:wght@400;600&display=swap">
+<style>
+@font-face {
+  font-family: 'Aoyagi Reisho';
+  src: url('assets/aoyagi-reisho.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  /* ===== 展厅底色（深色） ===== */
+  --bg:           #14100c;   /* 深色展厅底 */
+  --font:         var(--font-serif);
+  /* ===== 底色：宣纸 / 绢本 ===== */
+  --paper:        #ece3d1;   /* 页面底色，绢本暖米 */
+  --paper-deep:   #e2d6bf;   /* 画卷容器底，略深一档 */
+  --paper-light:  #f6f1e6;   /* 卡片 / 弹窗底 */
+  /* ===== 墨色层级 ===== */
+  --ink:          #2e2a24;   /* 主文字，墨黑偏暖 */
+  --ink-soft:     #5c5446;   /* 正文次色 */
+  --ink-faint:    #8a7f6d;   /* 说明文字 / 标注 */
+  /* ===== 锚点色：天青 + 缃色 ===== */
+  --qing:         #6e8f8c;   /* 天水碧，识别色，用于链接/标签 */
+  --qing-deep:    #4f6e6b;   /* 悬停加深 */
+  --xiang:        #bfa25a;   /* 缃色，仅用于极少量强调 */
+  --zhusha:       #a83a2e;   /* 朱砂，热点与印章 */
+  --zheshi:       #8c5a3c;   /* 赭石，辅助暖色 */
+  /* ===== 线条 / 描边 ===== */
+  --line:         #d4c5a9;   /* 主分隔线 */
+  --line-soft:    #e5d8c2;   /* 细虚线 */
+  /* ===== 字体 ===== */
+  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+  --font-num:   "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  /* ===== Design System tokens（shadcn 风格命名，映射国风色板） =====
+     视觉来源：参考图①现代工笔白兰+竖向金带+朱砂印 → 金色主色 / 绢本亮面；
+              参考图②古画市井+民俗拼贴+菊枝金红 → 暖纸底 / 分层表面 / 民俗暖彩。 */
+  --background:     var(--paper);
+  --foreground:     var(--ink);
+  --card:           var(--paper-light);
+  --card-foreground: var(--ink);
+  --popover:        var(--paper-light);
+  --popover-foreground: var(--ink);
+  --primary:        #b98c3e;   /* 描金：金带 / 菊 / 古画描金 */
+  --primary-foreground: #fbf6ea;
+  --secondary:      #ece3d1;
+  --secondary-foreground: #5c5446;
+  --muted:          #efe7d6;
+  --muted-foreground: var(--ink-faint);
+  --accent:         var(--qing);
+  --accent-foreground: #10201f;
+  --destructive:    var(--zhusha);   /* 朱砂印 */
+  --destructive-foreground: #fdf4ef;
+  --border:         var(--line);
+  --input:          #d9c9ac;
+  --ring:           #b98c3e;
+  --radius:         10px;
+  --radius-lg:      14px;
+  --radius-sm:      6px;
+  /* 纵深 / 阴影 */
+  --shadow-sm:  0 1px 2px rgba(40,30,15,.08);
+  --shadow-md:  0 6px 18px rgba(40,30,15,.14);
+  --shadow-lg:  0 24px 60px rgba(30,20,10,.30);
+  --shadow-gold: 0 6px 24px rgba(185,140,62,.30);
+  --ease-out:   cubic-bezier(.22,.61,.36,1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow: hidden; }
+body {
+  font-family: var(--font);
+  /* 全屏横向展卷：禁用原生滚动，背景还原为纯色展厅底（去掉山水画） */
+  background: var(--bg);
+  color: #e6dcc8;
+  min-height: 100vh;
+}
+body::selection { background: rgba(168,58,46,0.18); }
+
+a { color: var(--qing-deep); text-decoration: none; }
+
+/* ===== 开场帷幕 ===== */
+.curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+}
+.curtain-half {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 50%;
+  background: #17130f;
+  transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.curtain-half.left  { left: 0;  transform-origin: left center; }
+.curtain-half.right { right: 0; transform-origin: right center; }
+.curtain-line {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 1px; height: 0;
+  background: linear-gradient(180deg, transparent, #c9a961, transparent);
+  transform: translate(-50%, -50%);
+  transition: height 0.6s ease, opacity 0.6s ease;
+}
+.curtain.open .curtain-line { height: 60vh; opacity: 1; }
+.curtain.open .curtain-half.left  { transform: scaleX(0); }
+.curtain.open .curtain-half.right { transform: scaleX(0); }
+.curtain.open .curtain-line { opacity: 0; transition-delay: 0.5s; }
+
+/* ===== 页头 ===== */
+.page-header {
+  text-align: center;
+  padding: 30px 20px 4px;
+}
+.page-header h1 {
+  font-family: 'Aoyagi Reisho', var(--font-serif);
+  font-size: 32px;
+  font-weight: normal;
+  letter-spacing: 12px;
+  color: var(--ink);
+}
+.page-header .seal-mark {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: var(--zhusha);
+  border: 1.5px solid rgba(168,58,46,0.55);
+  padding: 4px 12px;
+  border-radius: 3px;
+}
+.page-header p {
+  font-size: 13px;
+  color: var(--ink-faint);
+  letter-spacing: 2px;
+  line-height: 1.9;
+  margin-top: 10px;
+}
+.page-header p em { color: var(--zheshi); font-style: normal; }
+
+/* ===== 工具栏 ===== */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  max-width: 1400px;
+  margin: 10px auto 0;
+  padding: 0 20px;
+}
+.toolbar button {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--ink-soft);
+  background: var(--paper-light);
+  border: 1px solid var(--line);
+  padding: 6px 16px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.toolbar button:hover { color: var(--ink); border-color: var(--ink-faint); }
+.toolbar button.primary { border-color: var(--qing); color: var(--qing-deep); }
+.toolbar .hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 1.5px;
+  align-self: center;
+}
+
+/* ===== 全屏横向展卷（滚轮→横滚 / 拖拽 / lerp） ===== */
+.fullscreen-viewport {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+.fullscreen-viewport:active { cursor: grabbing; }
+/* 四周暗、中间透亮的展厅射灯 */
+.fullscreen-viewport::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(10,8,6,0.72) 100%);
+  z-index: 50;
+}
+/* 画卷轨道：横向位移（宽=视口，短画幅由 JS 切换 justify-content 实现水平居中） */
+.scroll-track {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: flex-start;
+  will-change: transform;
+}
+/* 画卷容器：高=屏高，宽由画幅比例撑开 */
+.painting-wrapper {
+  position: relative;
+  height: 100%;
+  box-shadow: inset 0 20px 40px rgba(0,0,0,0.6), inset 0 -20px 40px rgba(0,0,0,0.6);
+  /* 画卷卷起/展开转场：两轴合拢成中线 → 换画 → 展开 */
+  transition: clip-path .6s cubic-bezier(.65, 0, .35, 1);
+  will-change: clip-path;
+}
+/* 卷起状态：左右各裁 50%，只剩中间一条线 */
+.painting-wrapper.is-rolling { clip-path: inset(0 50% 0 50%); }
+/* 卷起时两端木轴合拢到中线，形成一根立轴高光 */
+.painting-wrapper.is-rolling::before,
+.painting-wrapper.is-rolling::after {
+  left: 50%; right: auto;
+  width: 10px;
+  transform: translateX(-50%);
+  background: #0d0906;
+  box-shadow: 0 0 26px 12px rgba(0,0,0,.6);
+  z-index: 99;
+}
+.painting-wrapper img {
+  display: block;
+  height: 100vh;
+  width: auto;
+  max-width: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+/* 画卷两端的木轴 */
+.painting-wrapper::before,
+.painting-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 24px;
+  background: linear-gradient(90deg, #1a110a 0%, #5c3a21 30%, #8c5a3c 50%, #5c3a21 70%, #1a110a 100%);
+  box-shadow: 0 0 15px rgba(0,0,0,0.8);
+  z-index: 10;
+}
+.painting-wrapper::before { left: 0; }
+.painting-wrapper::after { right: 0; }
+
+/* 右上角浮动工具栏（标定模式入口） */
+.toolbar.toolbar--float {
+  position: absolute;
+  top: 14px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  margin: 0;
+  justify-content: center;
+}
+/* 右下角展卷提示 */
+.pan-hint {
+  position: absolute;
+  right: 16px; bottom: 14px;
+  z-index: 60;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: rgba(230,220,200,0.85);
+  background: rgba(16,13,10,0.5);
+  padding: 5px 12px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+/* 画卷间切换（合乐图 ↔ 宫乐图）：底部居中分段控件 */
+.scroll-switch {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 61;
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(16,13,10,0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(201,169,97,.35);
+  border-radius: 4px;
+}
+.scroll-switch button {
+  font-family: var(--font-serif);
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: rgba(230,220,200,.85);
+  background: transparent;
+  border: 0;
+  padding: 7px 15px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all .25s ease;
+}
+.scroll-switch button:hover { color: #e8c87a; }
+.scroll-switch button.active {
+  color: #2a2016;
+  background: linear-gradient(180deg, #c39a4a, #a97f2e);
+  box-shadow: 0 4px 14px rgba(0,0,0,.35);
+}
+/* 中 / EN 语言切换：固定右上角，始终可用 */
+.lang-toggle {
+  position: fixed;
+  top: 14px; right: 18px;
+  z-index: 2200;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(16,13,10,.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(201,169,97,.4);
+  border-radius: 3px;
+}
+.lang-toggle button {
+  font-family: var(--font-serif);
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: rgba(230,220,200,.88);
+  background: transparent;
+  border: 0;
+  padding: 5px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all .25s ease;
+}
+.lang-toggle button:hover { color: #e8c87a; }
+.lang-toggle button.active {
+  color: #2a2016;
+  background: linear-gradient(180deg, #c39a4a, #a97f2e);
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+
+/* ===== 热点：墨迹晕开（随画卷缩放保持对齐） ===== */
+/* ===== 热点：展厅射灯光点 ===== */
+.hotspot {
+  position: absolute;
+  width: 44px; height: 44px;
+  margin-left: -22px; margin-top: -22px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none;
+  font-size: 0;
+}
+/* 光点（内层元素） */
+.hotspot .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #e8c87a;
+  box-shadow:
+    0 0 6px 2px rgba(232,200,122,0.55),
+    0 0 18px 6px rgba(232,200,122,0.18);
+  opacity: 0.35;
+  transition: opacity 0.45s ease, transform 0.45s ease, box-shadow 0.45s ease;
+}
+.hotspot:hover .dot,
+.hotspot:focus-visible .dot {
+  opacity: 1;
+  transform: scale(2.2);
+  box-shadow:
+    0 0 10px 4px rgba(232,200,122,0.85),
+    0 0 32px 12px rgba(232,200,122,0.35);
+}
+/* 木牌下方垂坠的朱砂流苏 */
+.hotspot::before {
+  content: "";
+  position: absolute;
+  bottom: 32px; left: 50%;
+  width: 2px;
+  height: 12px;
+  background: #a83a2e;
+  transform: translateX(-50%) scaleY(0);
+  transform-origin: top;
+  opacity: 0;
+  transition: all 0.35s ease;
+}
+/* 附着小卡：乐器上轻轻挂下的一张绢纸签（做旧绢底 · 描金细边 · 微倾 · 如名片轻附） */
+.hotspot::after {
+  content: attr(data-name);
+  position: absolute;
+  bottom: 46px; left: 50%;
+  transform: translateX(-50%) translateY(10px) rotate(-0.7deg);
+  padding: 7px 15px 6px;
+  border-radius: 3px;
+  /* 绢纸做旧：暖纸底 + 细微纤维 + 描金细边 */
+  background:
+    radial-gradient(circle at 88% 20%, rgba(168,58,46,.14) 0 3px, transparent 4px),
+    linear-gradient(180deg, rgba(240,231,212,.97), rgba(224,211,186,.95)),
+    repeating-linear-gradient(88deg, rgba(120,90,50,.05) 0 1px, transparent 1px 4px);
+  border: 1px solid rgba(185,140,62,.9);
+  box-shadow:
+    inset 0 0 0 1px rgba(251,246,234,.6),
+    inset 0 -8px 16px rgba(120,90,50,.10),
+    0 3px 9px rgba(40,30,15,.30);
+  color: #3d2b1f;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+.hotspot:hover::before,
+.hotspot:focus-visible::before {
+  opacity: 1;
+  transform: translateX(-50%) scaleY(1);
+}
+.hotspot:hover::after,
+.hotspot:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ===== 画中皇帝 · 宫乐图光标（与乐器热点同画） ===== */
+.emperor-hotspot::before,
+.emperor-hotspot::after { display: none; }
+.emperor-hotspot .dot {
+  width: 13px; height: 13px;
+  background: radial-gradient(circle, #f5d78a, #c9a14a);
+  box-shadow: 0 0 0 4px rgba(201,169,97,.28), 0 0 24px 8px rgba(232,200,122,.5);
+  animation: emperor-pulse 2.2s ease-out infinite;
+}
+@keyframes emperor-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(232,200,122,.6), 0 0 24px 8px rgba(232,200,122,.45); }
+  70%  { box-shadow: 0 0 0 16px rgba(232,200,122,0), 0 0 30px 10px rgba(232,200,122,.3); }
+  100% { box-shadow: 0 0 0 0 rgba(232,200,122,0), 0 0 24px 8px rgba(232,200,122,.45); }
+}
+.emperor-hotspot .emperor-label {
+  position: absolute; left: 50%; top: -32px;
+  transform: translateX(-50%);
+  font-size: 12px; letter-spacing: 3px;
+  color: #f0d89a; white-space: nowrap;
+  text-shadow: 0 2px 10px rgba(0,0,0,.8);
+  background: rgba(20,16,12,.6);
+  padding: 3px 11px; border-radius: 4px;
+  border: 1px solid rgba(201,169,97,.55);
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s ease;
+}
+.emperor-hotspot:hover .emperor-label,
+.emperor-hotspot:focus-visible .emperor-label,
+.emperor-hotspot.open .emperor-label { opacity: 1; }
+.emperor-hotspot .emperor-tip {
+  position: absolute; left: 50%; top: 30px;
+  transform: translateX(-50%) translateY(8px);
+  width: 260px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 13px 16px;
+  text-align: left;
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s var(--ease-out), transform .3s var(--ease-out);
+  z-index: 30;
+}
+.emperor-hotspot:hover .emperor-tip,
+.emperor-hotspot:focus-visible .emperor-tip,
+.emperor-hotspot.open .emperor-tip {
+  opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto;
+}
+.emperor-tip b {
+  display: block; font-size: 15px; letter-spacing: 3px;
+  color: var(--ink); font-weight: normal; margin-bottom: 6px;
+}
+.emperor-tip i {
+  display: block; font-style: normal; font-size: 12.5px;
+  line-height: 1.7; color: var(--ink-soft);
+}
+
+/* ===== 乐器列表（卷下索引） ===== */
+.instrument-index {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 26px 24px 46px;
+}
+.instrument-index h2 {
+  font-family: 'Aoyagi Reisho', var(--font-serif);
+  font-size: 17px;
+  font-weight: normal;
+  letter-spacing: 8px;
+  color: var(--ink-faint);
+  text-align: center;
+  margin-bottom: 18px;
+}
+.index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.index-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--paper-light);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  color: var(--ink);
+  transition: border-color 0.2s, transform 0.2s;
+}
+.index-item:hover { border-color: var(--qing); transform: translateY(-1px); }
+.index-item .in-num {
+  font-family: var(--font-num);
+  font-size: 14px;
+  color: var(--zhusha);
+  min-width: 18px;
+}
+.index-item .in-name { font-size: 14px; letter-spacing: 1px; }
+.index-item .in-tag { font-size: 11px; color: var(--ink-faint); letter-spacing: 1px; margin-left: auto; white-space: nowrap; }
+
+/* ===== 视图切换 ===== */
+.view { display: none; }
+.view.active { display: block; }
+body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwards; }
+@keyframes scroll-away { to { opacity: 0; filter: blur(3px); transform: scale(0.995); } }
+
+/* ===== 详情页 ===== */
+#view-detail {
+  position: relative;
+  min-height: 100vh;
+  background:
+    linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
+    url('assets/ticket-art.jpg') center/cover no-repeat fixed;
+}
+.detail-wrap {
+  position: relative;
+  z-index: 1;
+}
+/* 磨砂质感：半透明纸面 + 背景模糊，合乐图底纹透过 */
+.detail-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 26px 20px 60px;
+  background: rgba(243,235,219,0.62);
+  backdrop-filter: blur(22px) saturate(1.18);
+  -webkit-backdrop-filter: blur(22px) saturate(1.18);
+  border-left: 1px solid rgba(255,250,240,0.25);
+  border-right: 1px solid rgba(255,250,240,0.25);
+  box-shadow: 0 30px 90px rgba(8,6,4,0.5);
+}
+/* LineWaves 描金波线背景层：铺满详情、垫在磨砂卡后、低透明露出合乐图 */
+.detail-waves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.line-waves__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* 锦鲤群背景层：展卷界面画卷之上、展厅射灯之下，低透明 */
+.scroll-waves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 30;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.5;
+}
+.koi-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.detail-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--ink-faint);
+  border: 1px solid var(--line);
+  padding: 6px 14px;
+  border-radius: 2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.back-link:hover { color: var(--ink); border-color: var(--ink-faint); }
+.back-link svg { width: 14px; height: 14px; }
+/* 悬浮退出按键（乐器介绍弹出后右上角） */
+.detail-close {
+  position: fixed; top: 22px; right: 26px;
+  z-index: 60;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px;
+  border: 1px solid rgba(201,169,97,.65);
+  border-radius: var(--radius);
+  background: rgba(24,19,14,.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #e8c87a;
+  font-size: 13px; letter-spacing: 3px;
+  cursor: pointer;
+  transition: all .25s var(--ease-out);
+}
+.detail-close svg { width: 15px; height: 15px; }
+.detail-close:hover {
+  background: rgba(185,140,62,.9); color: #2a2016;
+  border-color: rgba(201,169,97,.95);
+  box-shadow: 0 8px 26px rgba(0,0,0,.4);
+  transform: translateY(-1px);
+}
+
+.instrument-card {
+  background: var(--paper-light);
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 60px rgba(60,40,20,0.22);
+  padding: 16px 20px 10px;
+}
+/* 详情图缩放舞台 */
+.detail-tools {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.detail-tools button {
+  font-family: var(--font-serif);
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--ink-soft);
+  background: var(--paper-light);
+  border: 1px solid var(--line);
+  padding: 4px 14px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.detail-tools button:hover { color: var(--ink); border-color: var(--ink-faint); }
+.detail-tools button.primary { border-color: var(--qing); color: var(--qing-deep); }
+.detail-zoom {
+  position: relative;
+  width: 100%;
+  height: 440px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18px 18px, rgba(185,140,62,.6) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at calc(100% - 18px) 18px, rgba(185,140,62,.6) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 18px calc(100% - 18px), rgba(185,140,62,.6) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at calc(100% - 18px) calc(100% - 18px), rgba(185,140,62,.6) 0 1.5px, transparent 2.5px),
+    radial-gradient(ellipse at 50% 42%, rgba(232,200,122,.20), transparent 62%),
+    radial-gradient(ellipse at 50% 50%, rgba(20,16,12,.14), transparent 78%),
+    linear-gradient(180deg, #f6efdd 0%, #e4d8c0 100%);
+  border: 1px solid rgba(185,140,62,.5);
+  box-shadow: inset 0 0 0 3px rgba(185,140,62,.12), 0 14px 40px rgba(60,40,20,.2);
+  cursor: grab;
+  touch-action: none;
+}
+/* 乐器图框：上下描金回纹纹样带 */
+.detail-zoom::before,
+.detail-zoom::after {
+  content: "";
+  position: absolute; left: 0; right: 0;
+  height: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='12' viewBox='0 0 16 12'%3E%3Cpath d='M1 1h10v8H3V3h6' fill='none' stroke='%23b98c3e' stroke-width='1' opacity='0.55'/%3E%3Cpath d='M15 11H5V3h8v6H7' fill='none' stroke='%23b98c3e' stroke-width='1' opacity='0.25'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: 16px 12px;
+  background-color: rgba(238,229,211,.78);
+  pointer-events: none;
+  z-index: 4;
+}
+.detail-zoom::before { top: 0; border-bottom: 1px solid rgba(185,140,62,.32); }
+.detail-zoom::after { bottom: 0; border-top: 1px solid rgba(185,140,62,.32); }
+.detail-zoom:active { cursor: grabbing; }
+.detail-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+  touch-action: none;
+}
+.detail-content {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  line-height: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+  touch-action: none;
+}
+.detail-content img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+.detail-zoom-hint {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  font-size: 11px;
+  color: rgba(247,240,226,0.8);
+  letter-spacing: 1px;
+  background: rgba(46,42,36,0.4);
+  padding: 3px 9px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* ===== HoloCard 全息卡（@react-bits/HoloCard 纯原生 WebGL2 移植）===== */
+.holo-card {
+  --hc-w: 320px;
+  --hc-ratio: 0.716;
+  --hc-radius: 14px;
+  position: relative;
+  display: inline-block;
+  width: var(--hc-w);
+  max-width: 100%;
+  aspect-ratio: var(--hc-ratio);
+  border-radius: var(--hc-radius);
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+}
+.holo-card__shadow {
+  position: absolute;
+  inset: 10% 7% -4%;
+  border-radius: var(--hc-radius);
+  background: rgba(0, 0, 0, 0.42);
+  filter: blur(26px);
+  pointer-events: none;
+  will-change: transform;
+}
+.holo-card__rotor {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.holo-card__face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--hc-radius);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.holo-card__face img,
+.holo-card__face canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.holo-card__face img {
+  object-fit: cover;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.holo-card__face canvas {
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+.holo-card[data-ready] .holo-card__face canvas {
+  opacity: 1;
+}
+
+/* 宫乐图详情：乐器图以"从画上揭下的绢纸附着小卡"呈现，居中放进舞台，随缩放平移联动 */
+.detail-content .attached-card {
+  display: block;
+  width: min(400px, 88%);
+  margin: 0 auto;
+}
+.attached-card {
+  --ac-border: rgba(185,140,62,.62);
+  position: relative;
+  display: block;
+  padding: 11px;
+  background:
+    linear-gradient(180deg, #f4ecd9 0%, #e9ddc2 100%);
+  border: 1px solid var(--ac-border);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 2px rgba(255,252,242,.5),
+    inset 0 0 0 3px rgba(185,140,62,.16),
+    0 18px 44px rgba(50,30,12,.32),
+    0 3px 9px rgba(50,30,12,.16);
+  transform: rotate(-0.5deg);
+  transition: transform .3s cubic-bezier(.22,.61,.36,1), box-shadow .3s ease;
+}
+.attached-card:hover {
+  transform: rotate(-0.5deg) translateY(-2px);
+  box-shadow:
+    inset 0 0 0 2px rgba(255,252,242,.5),
+    inset 0 0 0 3px rgba(185,140,62,.2),
+    0 26px 56px rgba(50,30,12,.38),
+    0 4px 12px rgba(50,30,12,.2);
+}
+/* 四周描金细线：像裱过的一道金边 */
+.attached-card::before {
+  content: "";
+  position: absolute; inset: 4px;
+  border: 1px solid rgba(185,140,62,.34);
+  border-radius: 2px;
+  pointer-events: none;
+}
+/* 上缘一条从画上垂下的丝带：附着感 */
+.attached-card::after {
+  content: "";
+  position: absolute; top: -15px; left: 50%;
+  width: 1px; height: 15px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent, rgba(168,58,46,.55));
+  box-shadow: 0 0 6px rgba(168,58,46,.4);
+  pointer-events: none;
+}
+.attached-card img {
+  display: block;
+  width: 100%; height: auto;
+  border-radius: 1px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+/* 宫乐图详情：乐器图以全息卡呈现，居中放进舞台，随缩放平移联动 */
+.detail-content .holo-card {
+  display: block;
+  width: min(420px, 88%);
+  margin: 0 auto;
+}
+/* 宫乐图乐器介绍背景 = 宫乐图本幅（合乐图等其余保持原样） */
+#view-detail.view-detail--gongle {
+  background:
+    linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
+    url('assets/gongle.jpg') center/cover no-repeat fixed;
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  padding: 16px 4px 8px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.card-head h2 {
+  font-family: 'Aoyagi Reisho', var(--font-serif);
+  font-size: 28px;
+  font-weight: normal;
+  letter-spacing: 6px;
+  color: var(--ink);
+}
+.instrument-tag {
+  background: var(--qing);
+  color: #f4efe4;
+  letter-spacing: 2px;
+  border-radius: 2px;
+  font-size: 12px;
+  padding: 3px 12px;
+}
+.instrument-desc {
+  font-size: 15px;
+  line-height: 2.1;
+  color: var(--ink-soft);
+  text-align: justify;
+  letter-spacing: 0.5px;
+  padding: 16px 4px 10px;
+}
+.info-row {
+  border-top: 1px dashed var(--line-soft);
+  padding: 10px 4px;
+  display: flex;
+  gap: 18px;
+  font-size: 14px;
+  line-height: 1.9;
+}
+.info-row .label { color: var(--ink-faint); letter-spacing: 1.5px; min-width: 84px; flex-shrink: 0; }
+.info-row .value { color: var(--ink); }
+
+.detail-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+.detail-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--ink-soft);
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper-light);
+  transition: color 0.2s, border-color 0.2s;
+}
+.detail-nav a:hover { color: var(--qing-deep); border-color: var(--qing); }
+.detail-nav .next { margin-left: auto; }
+
+/* ===== 页脚 ===== */
+.page-footer {
+  text-align: center;
+  padding: 20px 20px 32px;
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 2px;
+  line-height: 1.9;
+}
+
+/* ===== 标定模式 ===== */
+/* ===== 开始界面 ===== */
+#intro {
+  position: fixed; inset: 0; z-index: 1000;
+  background: #17130f;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  transition: opacity 1.2s ease, visibility 1.2s ease;
+}
+#intro.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+/* AnimatedContent 进入视口：子元素淡入上移 24px、0.6s ease-out、stagger 0.07、只触发一次 */
+.ac > * {
+  opacity: 0;
+  transform: translateY(24px);
+  will-change: opacity, transform;
+}
+.ac.in > * {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.6s var(--ease-out),
+    transform 0.6s var(--ease-out);
+}
+.ac.in > *:nth-child(1) { transition-delay: 0.00s; }
+.ac.in > *:nth-child(2) { transition-delay: 0.07s; }
+.ac.in > *:nth-child(3) { transition-delay: 0.14s; }
+.ac.in > *:nth-child(4) { transition-delay: 0.21s; }
+.ac.in > *:nth-child(5) { transition-delay: 0.28s; }
+.ac.in > *:nth-child(6) { transition-delay: 0.35s; }
+/* Magnet 磁吸容器 */
+.magnet {
+  position: relative;
+  display: inline-block;
+  will-change: transform;
+}
+/* SpecularButton 高光描金按钮 */
+.btn.specular {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #e8c87a;
+  font-size: 15px;
+  letter-spacing: 8px;
+  text-indent: 8px;
+  padding: 15px 48px;
+  position: relative;
+  isolation: isolate;
+  transition: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn.specular:active { transform: scale(0.97); }
+.btn.specular:focus-visible { outline: 2px solid rgba(201,169,97,.6); outline-offset: 3px; }
+/* SpecularButton 通用画布与标签（所有按钮） */
+.sb { transition: none !important; }
+.sb .sb-light {
+  position: absolute;
+  inset: -24px;
+  z-index: 1;
+  width: calc(100% + 48px);
+  height: calc(100% + 48px);
+  pointer-events: none;
+  display: block;
+}
+.sb .sb-label {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+#intro-bg {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  opacity: 0.32;
+  filter: sepia(0.35) brightness(0.65);
+  transition: opacity 1.2s ease, background-image 1.2s ease;
+}
+#intro-light {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle 500px at var(--lx, 38%) var(--ly, 58%),
+    rgba(255,235,190,0.32),
+    rgba(232,200,122,0.14) 35%,
+    rgba(200,170,110,0.05) 60%,
+    transparent 80%);
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  mix-blend-mode: screen;
+}
+#intro-content {
+  position: relative; z-index: 2; text-align: center;
+  color: #e9ddc8; padding: 2rem;
+}
+#intro-content .seal {
+  display: inline-block;
+  width: 54px; height: 54px; line-height: 54px;
+  border: 1.5px solid #a83a2e; color: #c95a4a;
+  font-size: 22px; margin-bottom: 1.8rem;
+  border-radius: 3px; letter-spacing: 0;
+}
+#intro-content h1 {
+  font-family: 'Aoyagi Reisho', var(--font-serif);
+  font-size: clamp(36px, 6.5vw, 72px);
+  font-weight: normal;
+  letter-spacing: 14px;
+  text-indent: 14px;
+  color: #f0e6d2;
+  margin-bottom: 1.2rem;
+  line-height: 1.2;
+}
+#intro-content .sub {
+  font-size: clamp(13px, 1.6vw, 17px);
+  letter-spacing: 6px; color: #b8a888;
+  margin-bottom: 2.2rem; text-indent: 6px;
+}
+#intro-content .desc {
+  max-width: 480px; margin: 0 auto 2.8rem;
+  font-size: 13px; line-height: 2; color: #9a8c72;
+  letter-spacing: 1px;
+}
+#intro-hint {
+  margin-top: 1.6rem; font-size: 11px;
+  color: #6a5e48; letter-spacing: 2px;
+}
+
+/* ===== 深色展厅：裸文字适配（浅色卡片 / 按钮保持原样） ===== */
+.page-header h1 { color: #f0e6d2; }
+.page-header .seal-mark { color: #d98a78; border-color: rgba(201,169,97,0.55); }
+.page-header p { color: #b3a588; }
+.page-header p em { color: #d8b884; }
+.toolbar .hint { color: #9a8c72; }
+.instrument-index h2 { color: #b3a588; }
+.page-footer { color: #8a7d65; }
+.back-link { color: #c8b896; border-color: rgba(201,169,97,0.35); }
+.back-link:hover { color: #e8c87a; border-color: rgba(201,169,97,0.8); }
+
+/* ===== 移动端 ===== */
+@media (max-width: 600px) {
+  .page-header h1 { font-size: 21px; letter-spacing: 5px; }
+  .page-header p { font-size: 12px; }
+  .scroll { margin: 14px 12px; padding: 12px 14px; }
+  .stage { height: 42vh; min-height: 260px; }
+  .hotspot { width: 40px; height: 40px; margin-left: -20px; margin-top: -20px; }
+  .card-head h2 { font-size: 20px; letter-spacing: 3px; }
+  .detail-zoom { height: 300px; }
+  .info-row { flex-direction: column; gap: 4px; }
+}
+
+/* ===== 独立入场界面：亚麻色 · 文件夹与票根 ===== */
+.welcome {
+  position: fixed; inset: 0; z-index: 1500;
+  background: linear-gradient(180deg, #f7f0e3 0%, #efe4cf 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 48px;
+  overflow: hidden;
+  transition: opacity 900ms ease;
+}
+.welcome.hide { opacity: 0; pointer-events: none; }
+.welcome__head { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.welcome__seal {
+  width: 60px; height: 60px; border-radius: 8px;
+  background: #a03a2e; color: #f5ead9;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  box-shadow: 0 8px 20px rgba(160,58,46,.35);
+  transform: rotate(-4deg);
+}
+.welcome__title { font-size: 22px; letter-spacing: 12px; color: #5a4632; }
+.welcome__hint { font-size: 13px; letter-spacing: 4px; color: #9a8968; margin-top: -4px; }
+
+/* ===== Folder 组件国风版（flap · solid，国风深木赭石） ===== */
+.folder-root {
+  --folder-scale: 1.25;
+  --folder-w: calc(224px * var(--folder-scale));
+  --folder-h: calc(176px * var(--folder-scale));
+  --folder-tab-h: calc(22px * var(--folder-scale));
+  --folder-r: calc(13px * var(--folder-scale));
+  --folder-shoulder: calc(16px * var(--folder-scale));
+  --folder-tab-x: 145px;
+  --folder-tab-w: 92px;
+  --folder-front-top: #a07850;
+  --folder-base: #7a4e2f;
+  --folder-front-bottom: #5a3a22;
+  --folder-inside-top: #5c3a21;
+  --folder-inside-bottom: #3a2b1e;
+  --folder-front-radius: calc(13px * var(--folder-scale));
+  position: relative; display: inline-block;
+  width: var(--folder-w);
+  height: calc(var(--folder-tab-h) + var(--folder-h));
+  font-family: var(--font);
+  user-select: none; -webkit-user-select: none;
+  /* 移除 drop-shadow 滤镜：transform 动画时它会强制离屏重算导致卡顿，改用 .folder-cast 软阴影 */
+  will-change: transform;
+  transform: translateZ(0);
+  transition: opacity .45s ease, transform .45s ease;
+}
+.folder-root[data-open] { opacity: .35; transform: translateY(26px) scale(.92); }
+.folder-stage { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 16%; }
+.folder-layer { position: absolute; top: 0; left: 0; }
+.folder-back { z-index: 4; width: var(--folder-w); height: calc(var(--folder-tab-h) + var(--folder-h)); clip-path: url(#folder-back-clip); }
+.folder-back-fill { position: absolute; inset: 0; background: linear-gradient(180deg, var(--folder-inside-top), var(--folder-inside-bottom)); }
+.folder-tab-text {
+  position: absolute; top: 0; left: var(--folder-tab-x); width: var(--folder-tab-w); height: var(--folder-tab-h);
+  display: flex; align-items: center; justify-content: center;
+  color: #f0e2c6; font-size: calc(12px * var(--folder-scale)); font-weight: 600; letter-spacing: 4px;
+}
+.folder-cast { position: absolute; left: 3%; width: 94%; height: 16px; bottom: -12px; border-radius: 50%; background: rgba(0,0,0,.38); filter: blur(9px); z-index: 1; }
+.folder-front {
+  z-index: 40; position: absolute; top: 93.5px; left: 0; width: var(--folder-w); height: 154px;
+  transform-origin: top center;
+  will-change: transform;
+  backface-visibility: hidden;
+  transition: transform .6s cubic-bezier(.22,1,.36,1);
+}
+.folder-root[data-open] .folder-front { transform: rotateX(-66deg); }
+.folder-face { position: absolute; inset: 0; border-radius: var(--folder-front-radius); overflow: hidden; }
+.folder-face-outer {
+  background: linear-gradient(160deg, var(--folder-front-top) 0%, var(--folder-base) 48%, var(--folder-front-bottom) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.06);
+}
+/* ===== 弹出的完整撕票（TearTicket 国风版） ===== */
+.tt-pop {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 1600;
+  display: flex; align-items: center; justify-content: center;
+  gap: 48px;
+  pointer-events: none; opacity: 0;
+  transition: opacity .4s ease;
+}
+.tt-pop.show { opacity: 1; pointer-events: auto; }
+.tt {
+  --tt-w: 460px; --tt-h: 250px; --tt-stub: 150px;
+  --tt-bg: #2e2016; --tt-stub-bg: #2e2016;
+  --tt-ink: #f0e2c6;
+  --tt-edge: rgba(232,200,128,.2);
+  --tt-edge-w: 1;
+  --tt-parallax: 6px;
+  --tt-body-w: 310px; --tt-body-h: 250px;
+  --tt-inset: 8px; --tt-span: .78;
+  --tt-art-radius: 8px;
+  position: relative; width: var(--tt-w); height: var(--tt-h);
+  color: var(--tt-ink);
+  user-select: none; -webkit-user-select: none;
+  transform: scale(.35);
+  transition: transform .7s cubic-bezier(.22,1,.36,1);
+}
+.tt-pop.show .tt { transform: scale(1); }
+.tt__stage { position: absolute; inset: 0; }
+.tt__plane { position: absolute; inset: 0; transform: perspective(1000px) rotate(4deg); }
+.tt__piece { position: absolute; inset: 0; pointer-events: none; }
+.tt__piece--stub { outline: none; will-change: transform; }
+.tt__edge { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.tt__edge path { fill: none; stroke: var(--tt-edge); stroke-width: var(--tt-edge-w); }
+.tt__paper { position: absolute; inset: 0; background: var(--tt-bg); pointer-events: auto; }
+.tt__paper--stub { background: var(--tt-stub-bg); cursor: grab; touch-action: none; }
+.tt__paper--stub:active { cursor: grabbing; }
+.tt__art {
+  position: absolute; top: var(--tt-inset); left: var(--tt-inset);
+  width: calc(var(--tt-body-w) - var(--tt-inset) * 2);
+  height: calc(var(--tt-body-h) * var(--tt-span) - var(--tt-inset) * 2);
+  border-radius: var(--tt-art-radius); overflow: hidden;
+}
+.tt__image {
+  position: absolute; top: calc(var(--tt-parallax) * -1); left: calc(var(--tt-parallax) * -1);
+  width: calc(100% + var(--tt-parallax) * 2); max-width: none;
+  height: calc(100% + var(--tt-parallax) * 2);
+  object-fit: cover; -webkit-user-drag: none;
+}
+.tt__scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top,
+    var(--tt-bg) 0%, rgba(46,32,22,.72) 30%,
+    rgba(46,32,22,.16) 58%, transparent 80%);
+}
+.tt__content {
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: calc(var(--tt-w) - var(--tt-stub));
+  display: flex; align-items: flex-end;
+  padding: 0 18px 14px;
+}
+.tt__name { font-size: 18px; letter-spacing: 6px; color: #f0e2c6; font-weight: 600; text-shadow: 0 2px 10px rgba(0,0,0,.7); }
+.tt__stub {
+  position: absolute; top: 0; right: 0; bottom: 0; width: var(--tt-stub);
+  display: flex; flex-direction: column; justify-content: center;
+  gap: 7px; padding: 0 20px;
+}
+.tt__stub h3 { font-size: 26px; letter-spacing: 9px; color: #e8c880; margin: 0; font-weight: 600; }
+.tt__stub p { font-size: 11px; letter-spacing: 2px; opacity: .85; margin: 0; line-height: 1.6; }
+.tt__stub span { font-size: 10px; letter-spacing: 2px; opacity: .6; margin-top: 5px; }
+.tt__stub::before {
+  content: ""; position: absolute; left: 0; top: 18px; bottom: 18px; width: 1px;
+  background: rgba(232,200,128,.25);
+}
+.tt__fibres { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.tt__fibres path { fill: none; stroke: var(--tt-bg); stroke-linecap: round; opacity: 0; }
+/* 撕票放大层：从票根位置丝滑放大到全屏 */
+.tt-zoom {
+  position: fixed; left: 0; top: 0; z-index: 1700; pointer-events: none;
+  width: 100vw; height: 100vh; overflow: hidden;
+  transform-origin: center;
+  opacity: 0;
+  will-change: transform, opacity;
+  transition: transform 1000ms cubic-bezier(.16,1,.3,1), opacity 300ms ease;
+}
+.tt-zoom img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.tt-zoom.fade { opacity: 0; transition: opacity 620ms ease; }
+
+/* ===== 详情进入视口：上移 24px + 淡入，0.6s ease-out，仅一次 ===== */
+.detail-wrap.detail-enter {
+  animation: detail-enter 0.6s ease-out;
+}
+@keyframes detail-enter {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Carousel 式乐器切换：仅上层图文卡片滑动转场（快而丝滑） =====
+   转场只作用于 .instrument-card（图文卡片），背景与导航条保持稳定；
+   终点对齐卡片自身基态 transform，避免破坏 hover 悬浮。 */
+.instrument-card.carousel-out {
+  animation-duration: 0.18s;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-fill-mode: forwards;
+}
+.instrument-card.carousel-out.to-next { animation-name: carouselOutNext; }
+.instrument-card.carousel-out.to-prev { animation-name: carouselOutPrev; }
+.instrument-card.carousel-in {
+  animation: carouselIn 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+@keyframes carouselOutNext { to { transform: translateX(42px) scale(0.985); opacity: 0; } }
+@keyframes carouselOutPrev { to { transform: translateX(-42px) scale(0.985); opacity: 0; } }
+@keyframes carouselIn {
+  from { transform: translateX(var(--carousel-in-x, -42px)) scale(0.99); opacity: 0; }
+  to   { transform: perspective(1200px) translateZ(0); opacity: 1; }
+}
+
+/* ===== UI 边角更圆 ===== */
+.instrument-card { border-radius: 20px; }
+.detail-tools { border-radius: 12px; }
+.detail-nav { border-radius: 16px; }
+.detail-top { border-radius: 12px; }
+
+/* ============================================================
+   Design System · 组件规范（Button / Card / Modal / 动效 / 纵深）
+   ============================================================ */
+
+/* ---- 按钮：统一基座 + 变体 ---- */
+.btn {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 8px 18px;
+  color: var(--ink-soft);
+  background: var(--card);
+  transition: transform .18s var(--ease-out), box-shadow .22s var(--ease-out),
+              background-color .2s ease, color .2s ease, border-color .2s ease;
+  will-change: transform;
+}
+.btn:active { transform: translateY(1px) scale(.97); }
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+.btn.btn--primary {
+  background: linear-gradient(180deg, #c39a4a, #a97f2e);
+  color: var(--primary-foreground);
+  border-color: #8a6a24;
+  box-shadow: var(--shadow-gold);
+}
+.btn.btn--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(185,140,62,.42);
+}
+.btn.btn--outline { background: var(--card); color: var(--ink-soft); border-color: var(--border); }
+.btn.btn--outline:hover { color: var(--ink); border-color: var(--ink-faint); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.btn.btn--ghost { background: transparent; color: var(--ink-soft); border-color: transparent; }
+.btn.btn--ghost:hover { color: var(--ink); background: rgba(0,0,0,.05); }
+.btn.btn--destructive { background: var(--destructive); color: #fff; border-color: #8c3026; }
+.btn.btn--sm { font-size: 12px; padding: 5px 13px; }
+.btn.btn--lg { font-size: 15px; padding: 13px 40px; letter-spacing: 6px; border-radius: var(--radius); }
+.btn.btn--gold { background: rgba(201,169,97,.10); color: #e8c87a; border-color: rgba(201,169,97,.5); }
+.btn.btn--gold:hover { background: rgba(201,169,97,.18); box-shadow: 0 0 28px rgba(201,169,97,.32); }
+
+/* ---- 卡片：统一表面 + 悬停纵深 ---- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  transition: transform .28s var(--ease-out), box-shadow .28s var(--ease-out), border-color .28s ease;
+}
+.card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--ring); }
+
+/* 乐器卡：继承卡片规范 + 极轻 3D 俯仰 */
+.instrument-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 16px 20px 10px;
+  transform: perspective(1200px) translateZ(0);
+  transition: box-shadow .3s var(--ease-out), transform .3s var(--ease-out);
+}
+.instrument-card:hover { box-shadow: 0 30px 70px rgba(30,20,10,.34); transform: perspective(1200px) translateZ(8px); }
+
+/* ---- 弹窗 / Modal：统一浮层表面 ---- */
+.modal-surface,
+.welcome {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+.welcome { border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+
+/* ---- 呼吸节奏 · hover feedback / 微交互 ---- */
+button { -webkit-tap-highlight-color: transparent; }
+.toolbar--float { animation: float-hint 4s var(--ease-out) infinite; }
+@keyframes float-hint { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(3px); } }
+#intro-start:hover { box-shadow: 0 0 34px rgba(201,169,97,.38); }
+
+/* ---- 空间纵深 · shader 渐变（呼吸的光场，非扁平） ---- */
+#shader {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 18% 8%, rgba(185,140,62,.12), transparent 46%),
+    radial-gradient(100% 80% at 82% 92%, rgba(110,143,140,.12), transparent 50%);
+  mix-blend-mode: screen; opacity: .55;
+  filter: blur(42px);
+  animation: shader-breathe 13s ease-in-out infinite alternate;
+}
+.fullscreen-viewport .shader {
+  position: absolute; inset: 0; z-index: 40; pointer-events: none;
+  mix-blend-mode: screen; opacity: .5;
+  background:
+    radial-gradient(120% 100% at 18% 8%, rgba(185,140,62,.18), transparent 46%),
+    radial-gradient(90% 90% at 85% 92%, rgba(110,143,140,.16), transparent 50%);
+  filter: blur(16px);
+  animation: shader-breathe 14s ease-in-out infinite alternate;
+}
+@keyframes shader-breathe {
+  from { transform: translate3d(-1.5%, -.5%, 0) scale(1); }
+  to   { transform: translate3d(1.5%, .8%, 0) scale(1.06); }
+}
+
+/* ---- scroll reveal（滚动显现） ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .6s var(--ease-out), transform .6s var(--ease-out);
+}
+.reveal.in { opacity: 1; transform: translateY(0); }
+
+/* ---- 悬停全局微交互：索引项 / 返回 ---- */
+.index-item { transition: transform .25s var(--ease-out), border-color .25s, box-shadow .25s; }
+.index-item:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.back-link { transition: opacity .25s ease, transform .25s var(--ease-out); }
+.back-link:hover { opacity: 1; transform: translateX(-2px); }
+</style>
+</head>
+<body>
+
+<div id="shader" aria-hidden="true"></div>
+
+<div class="curtain" id="curtain">
+  <div class="curtain-half left"></div>
+  <div class="curtain-half right"></div>
+  <div class="curtain-line"></div>
+</div>
+
+<!-- 中 / EN 语言切换 -->
+<div class="lang-toggle" id="langToggle" role="group" aria-label="语言 / Language">
+  <button type="button" data-lang="zh" class="active">中</button>
+  <button type="button" data-lang="en">EN</button>
+</div>
+
+<!-- ===== 独立入场界面：文件夹与票根（亚麻色） ===== -->
+<div class="welcome" id="welcome">
+  <div class="welcome__head">
+    <span class="welcome__seal">樂</span>
+    <span class="welcome__title">观乐指引</span>
+  </div>
+<!-- ===== Folder 组件国风版（flap · 翻盖文件夹） ===== -->
+<div class="folder-root" id="folderRoot" data-theme="dark">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <clipPath id="folder-back-clip">
+        <path d="M0 43.75 Q0 27.5 16.25 27.5 L125 27.5 C145 27.5 145 0 165 0 L217.5 0 C237.5 0 237.5 27.5 257.5 27.5 L263.75 27.5 Q280 27.5 280 43.75 L280 231.25 Q280 247.5 263.75 247.5 L16.25 247.5 Q0 247.5 0 231.25 Z"/>
+      </clipPath>
+    </defs>
+  </svg>
+  <div class="folder-stage" role="button" tabindex="0" aria-label="观乐指引">
+    <div class="folder-layer folder-back">
+      <div class="folder-back-fill"></div>
+      <div class="folder-tab-text">观乐指引</div>
+    </div>
+    <div class="folder-cast" aria-hidden="true"></div>
+    <div class="folder-layer folder-front">
+      <div class="folder-face folder-face-outer"></div>
+    </div>
+  </div>
+</div>
+<!-- 弹出的完整撕票 -->
+<div class="tt-pop" id="ttPop" aria-live="polite"></div>
+
+  <div class="welcome__hint">点击文件夹 · 取出观乐券</div>
+</div>
+
+
+<!-- ===== 开始界面 ===== -->
+<div id="intro">
+  <div id="intro-bg"></div>
+  <div id="intro-light"></div>
+  <div id="intro-content" class="ac">
+    <div class="seal">樂</div>
+    <h1>中国古画中的民乐</h1>
+    <div class="sub">唐音入画 · 合乐图</div>
+    <p class="desc">传五代南唐·周文矩绘　美国芝加哥美术馆藏<br>
+    画卷之上，十数乐伎依序而奏。<br>移动光标，于绢本光影间寻访十一器。</p>
+    <span class="magnet" id="introMagnet">
+      <button id="intro-start" type="button" class="btn specular"><span class="sb-label">开始观赏</span></button>
+    </span>
+    <div id="intro-hint">移動光標 · 照亮畫卷</div>
+  </div>
+</div>
+
+<!-- ===== 画卷地图 ===== -->
+<section id="view-scroll" class="view active">
+
+  <div class="toolbar toolbar--float">
+    <span class="hint">滚轮 / 拖动横向展卷 · 点击朱砂墨点进入乐器</span>
+  </div>
+
+  <div class="fullscreen-viewport" id="scrollViewport">
+    <div class="scroll-waves" aria-hidden="true"><canvas id="koiCanvas" class="koi-canvas"></canvas></div>
+    <div class="scroll-track" id="scrollTrack">
+      <div class="painting-wrapper" id="painting">
+        <img src="assets/scroll.jpg" alt="合乐图（五代南唐·传周文矩）整卷" id="paintingImg">
+        <!-- 热点由 JS 注入 -->
+      </div>
+    </div>
+    <div class="shader" aria-hidden="true"></div>
+    <span class="pan-hint">横向展卷 · 点朱砂墨点进入乐器</span>
+  </div>
+  <!-- 画卷间切换：合乐图 ↔ 宫乐图（卷起→换画→展开） -->
+  <div class="scroll-switch" id="scrollSwitch" role="group" aria-label="切换画卷">
+    <button type="button" data-scene="gongle"><span data-i18n="switchGongle">赏 · 唐人宫乐</span></button>
+    <button type="button" data-scene="hele" class="active"><span data-i18n="switchHele">观 · 合乐长卷</span></button>
+  </div>
+</section>
+
+<!-- ===== 乐器详情 ===== -->
+<section id="view-detail" class="view">
+  <div class="detail-waves" data-line-waves aria-hidden="true"></div>
+  <div class="detail-wrap" id="detailWrap"></div>
+</section>
+
+<script>
+/* ============ 开始界面：光影跟随 + 背景按场景配置 ============ */
+(function(){
+  const intro = document.getElementById('intro');
+  const light = document.getElementById('intro-light');
+  const bg = document.getElementById('intro-bg');
+  const startBtn = document.getElementById('intro-start');
+  let timer = null;
+
+  // 场景可配：hele 四段轮替 / gongle 单张宫乐图
+  window.__setIntro = function (sc) {
+    if (timer) { clearInterval(timer); timer = null; }
+    if (sc.introBg.mode === 'cycle') {
+      const segs = sc.introBg.segs;
+      let idx = 0;
+      bg.style.backgroundImage = `url('assets/${segs[0].img}')`;
+      light.style.setProperty('--lx', segs[0].lx);
+      light.style.setProperty('--ly', segs[0].ly);
+      timer = setInterval(() => {
+        idx = (idx + 1) % segs.length;
+        bg.style.backgroundImage = `url('assets/${segs[idx].img}')`;
+        light.style.setProperty('--lx', segs[idx].lx);
+        light.style.setProperty('--ly', segs[idx].ly);
+      }, 4500);
+    } else {
+      bg.style.backgroundImage = `url('${sc.introBg.img}')`;
+      light.style.setProperty('--lx', sc.introBg.lx);
+      light.style.setProperty('--ly', sc.introBg.ly);
+    }
+  };
+
+  intro.addEventListener('pointermove', (e) => {
+    const x = (e.clientX / window.innerWidth) * 100;
+    const y = (e.clientY / window.innerHeight) * 100;
+    light.style.setProperty('--lx', x + '%');
+    light.style.setProperty('--ly', y + '%');
+  });
+
+  startBtn.addEventListener('click', () => {
+    intro.classList.add('hidden');
+    if (window.__resetScroll) window.__resetScroll();
+    setTimeout(() => intro.remove(), 1400);
+  });
+})();
+
+
+/* ============ 场景与乐器数据 ============ */
+
+/* 语言：zh / en */
+let lang = 'zh';
+/* 静态界面文案（场景内文案随 SCENES[key].en 走） */
+const I18N = {
+  zh: {
+    welcomeSeal: '觀樂',
+    welcomeTitle: '观乐指引',
+    welcomeHint: '点击文件夹 · 取出观乐券',
+    introStart: '开始观赏',
+    introHint: '移動光標 · 照亮畫卷',
+    panHint: '横向展卷 · 点朱砂墨点进入乐器',
+    back: '返回画卷',
+    exit: '退出',
+    zoomOut: '−　缩小',
+    zoomFit: '适应',
+    zoomIn: '放大　＋',
+    zoomHint: '滚轮缩放 · 拖动平移',
+    indexTitle: '画卷乐器索引',
+    switchGongle: '赏 · 唐人宫乐',
+    switchHele: '观 · 合乐长卷',
+    cardName: '中国古画中的民乐'
+  },
+  en: {
+    welcomeSeal: 'GUIDE',
+    welcomeTitle: 'Guide to the Music',
+    welcomeHint: 'Click the folder · Take a ticket',
+    introStart: 'Begin the Tour',
+    introHint: 'Move the cursor · Illuminate the scroll',
+    panHint: 'Scroll horizontally · click a cinnabar dot to enter an instrument',
+    back: 'Back to Scroll',
+    exit: 'Exit',
+    zoomOut: '−　Zoom Out',
+    zoomFit: 'Fit',
+    zoomIn: 'Zoom In　＋',
+    zoomHint: 'Scroll to zoom · Drag to pan',
+    indexTitle: 'Instruments in the Scroll',
+    switchGongle: 'Appreciate · Tang Ladies\u2019 Music',
+    switchHele: 'Gaze · Ensemble Scroll',
+    cardName: 'Chinese Music in Ancient Painting'
+  }
+};
+
+let sceneKey = 'hele';
+const cur = () => SCENES[sceneKey];
+
+const SCENES = {
+  hele: {
+    key: 'hele',
+    img: 'assets/ticket-art.jpg',        // 票根 / 撕票放大图
+    scrollImg: 'assets/scroll.jpg',      // 展卷画
+    title: '合乐图 · 唐音入画',
+    ticketName: '合乐图',
+    ticketSub: '唐音入画 · 五代周文矩',
+    ticketNo: 'No. 284619',
+    ticketAlt: '合乐图',
+    introTitle: '中国古画中的民乐',
+    introSub: '唐音入画 · 合乐图',
+    introDesc: '传五代南唐·周文矩绘　美国芝加哥美术馆藏<br>画卷之上，十数乐伎依序而奏。<br>移动光标，于绢本光影间寻访十一器。',
+    introBg: { mode: 'cycle', segs: [
+      { img: 'intro_seg0.jpg', lx: '70%', ly: '55%' },
+      { img: 'intro_seg1.jpg', lx: '45%', ly: '55%' },
+      { img: 'intro_seg2.jpg', lx: '35%', ly: '50%' },
+      { img: 'intro_seg3.jpg', lx: '50%', ly: '55%' }
+    ] },
+    toolbar: '滚轮 / 拖动横向展卷 · 点击朱砂墨点进入乐器',
+    emperor: {
+      x: 20, y: 46, label: '宫中主人 · 观乐',
+      tip: '<b>宫乐图 · 唐音入画</b><i>中坐者乃宫中主人（帝王），端居榻上凝神观乐；身旁侍者乐工环侍，右侧乐伎依序合奏钟磬、建鼓、笙箫、琵琶诸器。正是五代南唐传周文矩《合乐图》所绘的宫廷雅乐盛景。</i>'
+    },
+    instruments: [
+  {
+    id: "jiangu", name: "建鼓", full: "建鼓 · 华盖镇乐", tag: "打击 · 雅乐领奏",
+    x: 91, y: 58,
+    desc: "建鼓之“建”，即立柱贯鼓、直植于座。先秦已有“夏足鼓、殷楹鼓、周悬鼓”，建鼓以柱贯通鼓腔立于跗座；曾侯乙墓出土的青铜盘龙鼓座，是其实物之最好见证。汉代以羽葆流苏饰其华盖（张衡《东京赋》），明清中和韶乐每以建鼓开典领奏。一鼓穿楹、华盖垂绦，声震殿堂，为整支乐队的节律骨架。",
+    rows: [
+      ["类别", "打击（革）"],
+      ["源流", "先秦建鼓 · 曾侯乙盘龙座"],
+      ["形制", "柱贯鼓腔 · 华盖羽葆"],
+      ["风格", "宫廷庄重 · 中和韶乐领奏"]
+    ]
+  },
+  {
+    id: "fangxiang", name: "方响", full: "方响 · 十六片铜", tag: "打击 · 铜片定律",
+    x: 69, y: 40,
+    desc: "方响自南朝梁“铜磬”演化，北周、隋代定名，唐代极盛，牛殳《方响歌》咏其“长短参差十六片”。铁制十六枚音片分两排悬于木架，“上圆下方”应“天圆地方”，以铁槌敲击，备十二律与四清声，是唐宋教坊定律之器。明清宫廷凯歌乐中，骑兵各执一片，声震军阵。",
+    rows: [
+      ["类别", "打击（铁）"],
+      ["源流", "梁铜磬 · 北周隋定名"],
+      ["形制", "十六片上圆下方 · 铁槌"],
+      ["风格", "唐宋定律 · 明清凯歌乐"]
+    ]
+  },
+  {
+    id: "konghou", name: "箜篌", full: "箜篌 · 卧竖凤首", tag: "弹拨 · 竖琴",
+    x: 59, y: 67,
+    desc: "箜篌乃卧箜篌、竖箜篌、凤首箜篌三类之统称。卧箜篌为本土“坎侯”，汉武帝令乐人侯调改制，用于祭祀雅乐；竖箜篌号“胡箜篌”，东汉随西域传入；凤首箜篌则于东晋由天竺传来。汉唐为极盛，明代中后期一度绝响，今以双排弦、可转调之现代箜篌复兴。中原温润、龟兹热烈、天竺神秘，风情各异。",
+    rows: [
+      ["类别", "弹拨（弦）"],
+      ["源流", "卧坎侯 · 竖胡箜篌 · 凤首天竺"],
+      ["形制", "多弦竖琴 · 弓臂弯月"],
+      ["风格", "汉唐极盛 · 今双排弦复兴"]
+    ]
+  },
+  {
+    id: "pipa", name: "琵琶", full: "琵琶 · 四弦曲项", tag: "弹拨 · 四弦曲项",
+    x: 58, y: 40,
+    desc: "琵琶素有“弹拨乐器之王”之誉。其源起于秦之弦鼗、汉之直项琵琶，南北朝时曲项琵琶经西域传入，梨形身、四弦、横抱以拨子弹之；至唐代改竖抱指弹，大盛于燕乐，“大弦嘈嘈如急雨，小弦切切如私语”写尽声情。今之琵琶四弦六相、二十四至二十五品，流派有无锡清丽、平湖文雅、浦东雄浑、崇明古朴、汪派刚柔五家。",
+    rows: [
+      ["类别", "弹拨（弦）"],
+      ["源流", "秦弦鼗 · 汉直项 · 西域曲项"],
+      ["形制", "梨形四弦 · 竖抱指弹"],
+      ["风格", "弹拨之王 · 五大流派"]
+    ]
+  },
+  {
+    id: "guzheng", name: "古筝", full: "古筝 · 众乐之王", tag: "弹拨 · 二十一弦",
+    x: 65, y: 44,
+    desc: "古筝又称秦筝、汉筝，迄今已有两千五百余年，相传起源于春秋战国的秦国，故称“秦筝”。它以长方形共鸣箱为身、桐木为面板、张二十一弦，弦柱（筝码）可移动调音。音域宽广、音色清越，素有“众乐之王”“东方钢琴”之誉。流派纷呈：山东刚健、河南高亢、潮州细腻、客家古朴、浙江清丽、陕西悲壮，各擅胜场。",
+    rows: [
+      ["类别", "弹拨（弦）"],
+      ["源流", "春秋秦地 · 秦筝汉筝"],
+      ["形制", "长方形共鸣箱 · 桐木面板 · 二十一弦"],
+      ["风格", "众乐之王 · 六大流派"]
+    ]
+  },
+  {
+    id: "sheng", name: "笙", full: "笙 · 匏竹合鸣", tag: "吹奏 · 八音之匏",
+    x: 73, y: 42,
+    desc: "笙为雅乐“八音”之匏类，殷墟甲骨文已有“龢”（即笙）。曾侯乙墓出土五件匏笙，足证公元前五世纪其制已备，《诗经》有“我有嘉宾，鼓瑟吹笙”。笙以笙斗承多支笙苗，苗底装响铜簧片，吹吸皆可成声，能同时奏出和弦。古制十三至十七簧，今之三十六簧加键扩音，更有方笙、排笙、抱笙之变。",
+    rows: [
+      ["类别", "吹奏（簧管）"],
+      ["源流", "殷墟甲骨 · 曾侯乙匏笙"],
+      ["形制", "笙苗簧片 · 匏木铜斗"],
+      ["风格", "八音之匏 · 可奏和声"]
+    ]
+  },
+  {
+    id: "hengdi", name: "横笛", full: "横笛 · 六孔横吹", tag: "吹奏 · 曲笛梆笛",
+    x: 70, y: 65,
+    desc: "横笛之制有二说：一谓张骞通西域时传入，一谓本土竹笛（马王堆汉墓已有实证）。“横笛”之名初见于北齐。明清以降，横吹为笛、竖吹为箫。笛身设吹孔、膜孔与六按音孔，贴笛膜为中国特色。南派曲笛醇厚，用于江南丝竹与昆曲；北派梆笛高亢，配梆子戏。当代刘森新派、改良笛更拓其境。",
+    rows: [
+      ["类别", "吹奏（竹管）"],
+      ["源流", "张骞西域 · 马王堆本土"],
+      ["形制", "吹孔膜孔六孔 · 贴膜"],
+      ["风格", "曲笛醇厚 · 梆笛高亢"]
+    ]
+  },
+  {
+    id: "chiba", name: "尺八", full: "尺八 · 一尺八寸", tag: "吹奏 · 五孔竖笛",
+    x: 81, y: 40,
+    desc: "尺八因管长一尺八寸得名，其前身可溯至东汉“汉笛”，唐代乐官吕才依律定名。南宋时东传日本，演为普化尺八，僧人“吹禅”修行，衍生明暗、琴古、都山诸流。管身五孔（前四后一），歌口外切如半月，常以竹根挖制，音色幽远苍凉。",
+    rows: [
+      ["类别", "吹奏（竹管）"],
+      ["源流", "东汉汉笛 · 唐吕才定名"],
+      ["形制", "五孔 · 歌口外切半月 · 竹根制"],
+      ["风格", "吹禅 · 明暗琴古都山流"]
+    ]
+  },
+  {
+    id: "bili", name: "筚篥", full: "筚篥 · 龟兹苇管", tag: "吹奏 · 双簧管",
+    x: 73, y: 75,
+    desc: "筚篥源于西域龟兹，《乐府杂录》称“本龟兹国乐也”，汉魏时传入中原，为唐代十部乐之要角。宋代宫廷改称“头管”，以之领奏，其后流传民间为管子。筚篥为双簧气鸣乐器，苇哨衔于口，八孔（前七后一），分大、中、小管，长约三十三、二十四半、十八厘米。北方笙管乐、鼓吹乐多以之主奏，且衍生朝鲜细筚篥、维吾尔巴拉曼、纳西波伯诸支。",
+    rows: [
+      ["类别", "吹奏（双簧）"],
+      ["源流", "龟兹传入 · 汉魏入华"],
+      ["形制", "八孔苇哨 · 大中小管"],
+      ["风格", "北地主奏 · 诸族分支"]
+    ]
+  },
+  {
+    id: "paiban", name: "拍板", full: "拍板 · 檀板节拍", tag: "打击 · 板拍成节",
+    x: 76, y: 80,
+    desc: "拍板源于上古“击壤”之戏，魏晋时有乐工宋纤以木片相击，传至唐玄宗梨园黄幡绰，遂名“绰板”。唐宋多用六片、九片，明代四片、清代三片，常以紫檀制成，故称“檀板”。分鼓板、书板、坠板等类，福建南音仍存五片荔木古制。板声清脆，为乐队点拍定节之要器。",
+    rows: [
+      ["类别", "打击（木）"],
+      ["源流", "击壤之戏 · 唐梨园绰板"],
+      ["形制", "紫檀板片 · 明清三片"],
+      ["风格", "南音五片古制 · 点拍定节"]
+    ]
+  },
+  {
+    id: "xiyaogu", name: "细腰鼓", full: "细腰鼓 · 沙漏双面", tag: "打击 · 双面革鼓",
+    x: 69, y: 79,
+    desc: "细腰鼓形如沙漏，腰细两端张皮，以绳索牵拉可调节音高。其源有二说：一说由西域传入，一说本土久有——西晋百越遗址已见青瓷细腰鼓塑像，南朝《荆楚岁时记》亦载其名。隋唐宫廷分“正鼓”“和鼓”，宋代称杖鼓。今壮族的蜂鼓、瑶族的长鼓（分公鼓母鼓）皆其遗绪，声有强弱，节律生动。",
+    rows: [
+      ["类别", "打击（革）"],
+      ["源流", "西域或本土 · 百越青瓷实证"],
+      ["形制", "沙漏双面 · 绳索调音"],
+      ["风格", "隋唐正鼓和鼓 · 壮瑶蜂鼓长鼓"]
+    ]
+  },
+    ]
+  ,
+    en: {
+      title: 'Ensemble Scroll · Tang Music in the Painting',
+      ticketName: 'Ensemble Scroll',
+      ticketSub: 'Tang Music · attr. Zhou Wenju, Five Dynasties',
+      ticketNo: 'No. 284619',
+      ticketAlt: 'Ensemble Scroll',
+      introTitle: 'Chinese Music in Ancient Painting',
+      introSub: 'Tang Music · Ensemble Scroll',
+      introDesc: 'Attributed to Zhou Wenju of the Southern Tang · The Art Institute of Chicago<br>Upon the scroll, a dozen musicians play in turn.<br>Move the cursor to seek eleven instruments among silk and light.',
+      toolbar: 'Scroll / drag to traverse · click a cinnabar dot to enter an instrument',
+      emperor: {
+        label: 'Master of the Court · Listening to Music',
+        tip: '<b>Tang Ladies\u2019 Music</b><i>At the centre sits the master of the court, gazing at the music from a couch, while attendants and musicians gather around; to the right, the players strike bells and chimes, beat the drums, and blow sheng, xiao and pipa in turn \u2014 the courtly elegance painted in the Ensemble Scroll attributed to Zhou Wenju.</i>'
+      },
+      instruments: [
+        { name: 'Jian Drum', full: 'Jian Drum · Canopy-led Music', tag: 'Percussion · Leader of Court Music',
+          desc: "The jian drum is so named for the post that pierces its body and stands it upright. It appeared as early as the pre-Qin period — the Zeng Houyi tomb yielded a bronze drum-stand carved with coiling dragons. In the Han its canopy was adorned with feather tassels, and in Ming–Qing 'Zhonghe' ceremonial music it led the whole ensemble. A single drum, a soaring canopy: its sound anchors the rhythm of the entire orchestra.",
+          rows: [["Category","Percussion (leather)"],["Origin","Pre-Qin jian drum · Zeng Houyi dragon stand"],["Form","Post through body · canopy & feather tassels"],["Style","Courtly gravitas · leads Zhonghe music"]] },
+        { name: 'Fangxiang', full: 'Fangxiang · Sixteen Bronze Plates', tag: 'Percussion · Bronze tuning plates',
+          desc: "The fangxiang evolved from the 'bronze qing' of the Southern Liang, was named in the Northern Zhou and Sui, and flourished in the Tang. Sixteen iron plates, graded long and short, hang in two rows from a wooden frame — 'round on top, square below', echoing heaven and earth. Struck with iron mallets, it covers the twelve pitches plus four harmonic notes and served as the court standard for tuning.",
+          rows: [["Category","Percussion (iron)"],["Origin","Liang bronze qing · named in N. Zhou–Sui"],["Form","Sixteen round-top square-base plates · iron mallet"],["Style","Tang tuning standard · Ming–Qing victory music"]] },
+        { name: 'Konghou', full: 'Konghou · Harp of Many Faces', tag: 'Plucked · Harp',
+          desc: "'Konghou' is a family of three: the horizontal, the vertical and the phoenix-head. The horizontal was the native 'kanhou' remade by the musician Hou Diao at Emperor Wu of Han\u2019s order for ritual music; the vertical came from the Western Regions in the Eastern Han, and the phoenix-head from India in the Eastern Jin. It flourished in Han and Tang, fell silent in the mid-Ming, and lives again today as a modern double-strung harp. Temperate at the centre, ardent in Kucha, mysterious in India — each land lent its own colour.",
+          rows: [["Category","Plucked (strings)"],["Origin","Kanhou · Hu konghou · phoenix-head from India"],["Form","Many-stringed harp · bowed arm like a crescent"],["Style","Peak in Han–Tang · revived as modern harp"]] },
+        { name: 'Pipa', full: 'Pipa · Four-String Bent-Neck', tag: 'Plucked · Four-string, bent neck',
+          desc: "The pipa is hailed as the 'king of plucked instruments'. It began as the Qin string-torrent and the straight-neck pipa of the Han; in the Northern and Southern Dynasties the bent-neck pipa arrived from the Western Regions — pear-shaped body, four strings, held horizontally and plucked with a plectrum. By the Tang it was held upright and plucked by hand, reigning in banquet music — 'the loud strings patter like urgent rain, the soft ones murmur like intimate talk'. Today\u2019s pipa has four strings, six frets and twenty-four to twenty-five bridges.",
+          rows: [["Category","Plucked (strings)"],["Origin","Qin xiantao · Han straight-neck · Western Regions bent-neck"],["Form","Pear-shaped, four-string · played upright"],["Style","King of plucked · five schools"]] },
+        { name: 'Guzheng', full: 'Guzheng · Sovereign of Instruments', tag: 'Plucked · Twenty-one strings',
+          desc: "The guzheng, also called Qin zheng or Han zheng, is over 2,500 years old, said to originate in the Qin state of the Spring–Autumn period. A rectangular resonant box with a paulownia top and twenty-one strings, its movable bridges allow tuning. With a wide range and a clear, limpid tone it is called the 'sovereign of instruments' and the 'Oriental piano'. Its schools flourish: Shandong strong, Henan impassioned, Chaozhou fine, Hakka archaic, Zhejiang graceful, Shaanxi poignant.",
+          rows: [["Category","Plucked (strings)"],["Origin","Qin lands, Spring–Autumn · Qin & Han zheng"],["Form","Rectangular box, paulownia top · 21 strings"],["Style","Sovereign of instruments · six schools"]] },
+        { name: 'Sheng', full: 'Sheng · Gourd and Bamboo in Harmony', tag: 'Wind · Gourd of the eight sounds',
+          desc: "The sheng belongs to the gourd (pao) family of ritual music\u2019s 'eight sounds'. The oracle-bone script of Yin already records 'he', the sheng\u2019s ancestor; five gourd shengs from the Zeng Houyi tomb prove its form by the fifth century BC, and the Book of Songs sings 'I have honoured guests, I play the se and blow the sheng'. A sheng cup holds many pipes, each fitted with a bronze reed at its base; blowing or drawing produces sound, and chords can be played at once. Ancient types had thirteen to seventeen pipes; today\u2019s keyed shengs reach thirty-six.",
+          rows: [["Category","Wind (reed pipes)"],["Origin","Yin oracle bones · Zeng Houyi gourd sheng"],["Form","Reed pipes on a gourd-wood cup"],["Style","Gourd of eight sounds · chords at once"]] },
+        { name: 'Hengdi', full: 'Hengdi · Six-Hole Transverse Flute', tag: 'Wind · Qu flute & bang flute',
+          desc: "Two origins are claimed for the transverse flute: one that Zhang Qian brought it back from the Western Regions, one that it was native — the Mawangdui Han tomb already furnishes evidence. The name 'hengdi' first appears in the Northern Qi. From the Ming–Qing onward, transverse playing is the flute and vertical playing the xiao. The flute has a blowing hole, a membrane hole and six finger holes, with a paper membrane pasted on as a Chinese hallmark. The southern qu flute is mellow, serving Jiangnan silk-and-bamboo and Kunqu; the northern bang flute is bright, paired with bangzi opera.",
+          rows: [["Category","Wind (bamboo)"],["Origin","Zhang Qian\u2019s Western Regions · Mawangdui native"],["Form","Blow, membrane & six holes · paper membrane"],["Style","Qu flute mellow · bang flute bright"]] },
+        { name: 'Chiba', full: 'Chiba · A Length of One Shaku Eight Sun', tag: 'Wind · Five-hole vertical bamboo',
+          desc: "The chiba takes its name from its length of one shaku eight sun (about 54 cm). Its lineage reaches back to the Eastern Han 'Han flute', given its fixed pitch by the Tang music official Lü Cai. In the Southern Song it travelled east to Japan and became the Fuke chiba, a monk\u2019s instrument of 'blowing meditation', giving rise to the Meian, Kinko and Tozan schools. Its five holes (four front, one back), half-moon notched mouthpiece and bamboo-root body give a remote, desolate tone.",
+          rows: [["Category","Wind (bamboo)"],["Origin","Eastern Han Han flute · named by Tang Lü Cai"],["Form","Five holes · half-moon notch · bamboo root"],["Style","Blowing meditation · Meian, Kinko, Tozan"]] },
+        { name: 'Bili', full: 'Bili · Kucha Reed Pipe', tag: 'Wind · Double reed',
+          desc: "The bili, also called 'hujia', is a reed instrument from the Western Regions. Its source lies in ancient Kucha; it entered the Central Plains in the Han–Wei, reached its height in the Tang as a mainstay of the ten court musics, and was renamed 'touguan' in the Song. A double-reed aerophone blown through a mouth reed, it has eight holes (seven front, one back) and comes in large, medium and small sizes of about 33, 24 and 18 cm. In northern pipe-and-drum music it often leads, and it has spawned Korean, Uyghur and Naxi branches.",
+          rows: [["Category","Wind (double reed)"],["Origin","From Kucha · entered China in Han–Wei"],["Form","Eight holes, reed mouthpiece · three sizes"],["Style","Leads northern bands · many ethnic branches"]] },
+        { name: 'Paiban', full: 'Paiban · Sandalwood Clappers', tag: 'Percussion · Wooden time-keeper',
+          desc: "The paiban descends from the ancient 'beating the clod' game. In the Wei–Jin, the musician Song Xian struck wooden slips together; by the Tang it passed through the pear-garden of Emperor Xuanzong via Huang Fanchuo, earning the name 'chuo ban'. The Tang–Song mostly used six or nine slips, the Ming four, the Qing three, commonly of sandalwood — hence 'tanban'. Fujian nanyin still preserves the five-slip litchi-wood form. Sharp and crisp, it sets the beat for the whole band.",
+          rows: [["Category","Percussion (wood)"],["Origin","Beating the clod · Tang pear-garden chuo ban"],["Form","Sandalwood slips · three slips in Ming–Qing"],["Style","Nanyin five-slip form · keeps the beat"]] },
+        { name: 'Xiyaogu', full: 'Xiyaogu · Hourglass Double-Head Drum', tag: 'Percussion · Two-headed leather drum',
+          desc: "The xiyaogu is shaped like an hourglass — slender at the waist, skinned at both ends — with cords that tighten to tune it. Two origins are told: one from the Western Regions, one native, for a blue-glazed xiyaogu figurine survives from the Baiyue sites of the Western Jin, and the name appears in the Southern dynasties\u2019 Jing-Chu Sui-Shi Ji. The Sui–Tang court divided it into 'zheng drum' and 'he drum'; the Song called it zhanggu. The Zhuang feng-drum and Yao long-drum of today are its descendants.",
+          rows: [["Category","Percussion (leather)"],["Origin","Western Regions or native · Baiyue porcelain proof"],["Form","Hourglass, two heads · cord-tuned"],["Style","Sui–Tang zheng/he drums · Zhuang feng, Yao long drums"]] }
+      ]
+    }
+  },
+  gongle: {
+    key: 'gongle',
+    img: 'assets/gongle.jpg',            // 票根 / 撕票放大图（宫乐图）
+    scrollImg: 'assets/gongle.jpg',      // 展卷画
+    title: '宫乐图 · 唐音入画',
+    ticketName: '宫乐图',
+    ticketSub: '唐音入画 · 唐人宫乐图',
+    ticketNo: 'No. 17009777',
+    ticketAlt: '宫乐图',
+    introTitle: '中国古画中的民乐',
+    introSub: '唐音入画 · 唐人宫乐图',
+    introDesc: '传唐·佚名　绢本设色<br>仕女围坐方桌，宴饮奏乐，闲适雍容。<br>移动光标，于绢本光影间寻访五器。',
+    introBg: { mode: 'single', img: 'assets/gongle.jpg', lx: '50%', ly: '45%' },
+    toolbar: '滚轮 / 拖动横向展卷 · 点击朱砂墨点进入乐器',
+    emperor: null,
+    instruments: [
+      {
+        id: "bili", name: "筚篥", full: "筚篥 · 龟兹苇管", tag: "吹奏 · 双簧管",
+        x: 91, y: 20,           // 最右侧仕女（筚篥吹奏者嘴边）
+        desc: "筚篥也称“胡笳”，是西域传来的簧管乐器。源头在古代龟兹，汉魏时经西域传入中原，唐代进入鼎盛，为宫廷十部乐之要角；诗人白居易、温庭筠皆留有咏筚篥诗篇。其为双簧气鸣乐器，苇哨衔于口，八孔（前七后一），分大、中、小管，音色悲凉高亢，在唐代燕乐中常主奏旋律。宫乐图中，中央四人最右侧的仕女正持筚篥吹奏。",
+        rows: [
+          ["类别", "吹奏（双簧）"],
+          ["源流", "西域龟兹 · 汉魏入华"],
+          ["形制", "八孔苇哨 · 大中小管"],
+          ["风格", "悲凉高亢 · 燕乐主奏"]
+        ]
+      },
+      {
+        id: "pipa", name: "琵琶", full: "琵琶 · 四弦曲项", tag: "弹拨 · 四弦曲项",
+        x: 77, y: 26,           // 右上仕女（横抱琵琶弹奏者）
+        desc: "琵琶是传统弹拨乐器的代表，音色清脆明亮、富有颗粒感，素有“弹拨乐器之王”之誉。南北朝时曲项琵琶经丝绸之路传入，梨形音箱、四弦，横抱用拨子弹奏。宫乐图中，中央四人左二的仕女横抱琵琶、手持拨子弹奏，这正是唐代典型的演奏方式，与后世竖抱指弹不同。",
+        rows: [
+          ["类别", "弹拨（弦）"],
+          ["源流", "西域曲项 · 唐燕乐鼎盛"],
+          ["形制", "梨形四弦 · 横抱拨弹"],
+          ["风格", "弹拨之王 · 唐奏古法"]
+        ]
+      },
+      {
+        id: "guzheng", name: "古筝", full: "古筝 · 众乐之王", tag: "弹拨 · 二十一弦",
+        x: 56, y: 26,           // 中上仕女（抚筝弹奏者手部）
+        desc: "古筝又称秦筝、汉筝，距今已有两千五百余年，源于春秋战国之秦地。其为长方形木质共鸣箱、桐木面板、张二十一弦，弦柱（筝码）可移动调音，音域宽广、音色清越。宫乐图中，中央四人右二的仕女正抚筝弹奏——汉地传统弹拨乐器与西域乐器同台，正是唐代胡俗交融的音乐形态。",
+        rows: [
+          ["类别", "弹拨（弦）"],
+          ["源流", "春秋秦地 · 秦筝汉筝"],
+          ["形制", "长方形共鸣箱 · 二十一弦"],
+          ["风格", "众乐之王 · 胡俗交融"]
+        ]
+      },
+      {
+        id: "sheng", name: "笙", full: "笙 · 匏竹合鸣", tag: "吹奏 · 八音之匏",
+        x: 38, y: 28,           // 左上仕女（持笙吹奏者嘴边）
+        desc: "笙为雅乐“八音”之匏类，殷墟甲骨文已有“龢”（即笙），曾侯乙墓出土五件匏笙。笙以笙斗承多支笙苗，苗底装响铜簧片，吹吸皆可成声，能同时奏出和弦，音色清越柔和。宫乐图中，中央四人最左的仕女正持笙吹奏——它在乐队中起到调和音色、丰满和声的作用。",
+        rows: [
+          ["类别", "吹奏（簧管）"],
+          ["源流", "殷墟甲骨 · 曾侯乙匏笙"],
+          ["形制", "笙苗簧片 · 匏木铜斗"],
+          ["风格", "八音之匏 · 调和和声"]
+        ]
+      },
+      {
+        id: "paiban", name: "拍板", full: "拍板 · 檀板节拍", tag: "打击 · 板拍成节",
+        x: 19, y: 18,           // 最左旁立侍女（双手执拍板胸前）
+        desc: "拍板源于上古“击壤”之戏，唐代散乐中地位颇高，控制节拍；唐玄宗时梨园乐工黄幡绰善奏，故又名“绰板”。多以紫檀制成故称“檀板”，将数片长条木板穿绳串联，演奏时以手执板相击发声。宫乐图中，旁立侍女双手执拍板击节——由多片木板串联而成，用于控制乐队的节奏与速度，是唐代燕乐节奏的核心。",
+        rows: [
+          ["类别", "打击（木）"],
+          ["源流", "击壤之戏 · 唐梨园绰板"],
+          ["形制", "紫檀板片 · 数片串联"],
+          ["风格", "点拍定节 · 燕乐核心"]
+        ]
+      }
+    ]
+  ,
+    en: {
+      title: 'Ladies\u2019 Music · Tang Music in the Painting',
+      ticketName: 'Ladies\u2019 Music',
+      ticketSub: 'Tang Music · Attr. unknown, Tang',
+      ticketNo: 'No. 17009777',
+      ticketAlt: 'Ladies\u2019 Music',
+      introTitle: 'Chinese Music in Ancient Painting',
+      introSub: 'Tang Music · Lady Musicians',
+      introDesc: 'Attr. unknown artist of the Tang · Ink and colour on silk<br>Ladies gather around a square table, feasting and playing music in idle elegance.<br>Move the cursor to seek five instruments among silk and light.',
+      toolbar: 'Scroll / drag to traverse · click a cinnabar dot to enter an instrument',
+      emperor: null,
+      instruments: [
+        { name: 'Bili', full: 'Bili · Kucha Reed Pipe', tag: 'Wind · Double reed',
+          desc: "The bili, also called 'hujia', is a reed instrument from the Western Regions. Its source lies in ancient Kucha; it entered the Central Plains in the Han–Wei and flourished in the Tang as a mainstay of the ten court musics, sung of by the poets Bai Juyi and Wen Tingyun. A double-reed aerophone with eight holes, it sounds plaintive and high. In the scroll, the rightmost of the four seated ladies plays the bili.",
+          rows: [["Category","Wind (double reed)"],["Origin","Kucha · entered China in Han–Wei"],["Form","Eight holes, reed mouthpiece · three sizes"],["Style","Plaintive and high · leads banquet music"]] },
+        { name: 'Pipa', full: 'Pipa · Four-String Bent-Neck', tag: 'Plucked · Four-string, bent neck',
+          desc: "The pipa is the representative of China\u2019s plucked strings, famed for its bright, articulate tone — the 'king of plucked instruments'. The bent-neck pipa came from the Western Regions along the Silk Road in the Northern and Southern Dynasties, pear-bodied, four-stringed, held horizontally and plucked with a plectrum. In the scroll, the second lady from the left of the central four holds the pipa horizontally and plucks it — the classic Tang manner, quite different from the later upright finger-plucking.",
+          rows: [["Category","Plucked (strings)"],["Origin","Western Regions bent-neck · Tang banquet peak"],["Form","Pear-shaped, four-string · horizontal plectrum"],["Style","King of plucked · the ancient Tang way"]] },
+        { name: 'Guzheng', full: 'Guzheng · Sovereign of Instruments', tag: 'Plucked · Twenty-one strings',
+          desc: "The guzheng is over 2,500 years old, born in the Qin state of the Spring–Autumn period. A rectangular wooden box with a paulownia top and twenty-one strings, its movable bridges allow tuning; its range is wide and its tone clear. In the scroll, the lady second from the right of the central four plays the zheng — a native Han instrument on stage beside Western ones, a living image of Tang musical fusion.",
+          rows: [["Category","Plucked (strings)"],["Origin","Qin lands, Spring–Autumn"],["Form","Rectangular box · 21 strings · movable bridges"],["Style","Sovereign of instruments · fusion of Hu & Han"]] },
+        { name: 'Sheng', full: 'Sheng · Gourd and Bamboo in Harmony', tag: 'Wind · Gourd of the eight sounds',
+          desc: "The sheng is of the gourd (pao) family among the 'eight sounds'; the oracle bones of Yin already record 'he', and five gourd shengs from the Zeng Houyi tomb prove its early form. Its pipes, each fitted with a bronze reed, can sound chords at once with a clear, soft tone. In the scroll, the leftmost of the four central ladies blows the sheng — it blends timbres and enriches the harmony of the band.",
+          rows: [["Category","Wind (reed pipes)"],["Origin","Yin oracle bones · Zeng Houyi gourd sheng"],["Form","Reed pipes on a gourd-wood cup"],["Style","Blends timbre · enriches harmony"]] },
+        { name: 'Paiban', full: 'Paiban · Sandalwood Clappers', tag: 'Percussion · Wooden time-keeper',
+          desc: "The paiban descends from the 'beating the clod' game and held high rank in Tang variety music for keeping time; the pear-garden musician Huang Fanchuo excelled at it, hence the name 'chuo ban'. Commonly of sandalwood — 'tanban' — several long slips are strung on a cord and struck together by hand. In the scroll, a serving lady to the side holds the paiban and beats time — the rhythmic core of Tang banquet music.",
+          rows: [["Category","Percussion (wood)"],["Origin","Beating the clod · Tang pear-garden chuo ban"],["Form","Sandalwood slips · strung on a cord"],["Style","Keeps the beat · core of banquet music"]] }
+      ]
+    }
+  }
+};
+
+let instruments = SCENES.hele.instruments;
+let byId = {};
+function rebuildIndex() {
+  byId = {};
+  instruments.forEach((it, i) => { it.index = i; byId[it.id] = it; });
+}
+rebuildIndex();
+
+function activateScene(key) {
+  const sc = SCENES[key];
+  if (!sc) return;
+  sceneKey = key;
+  const src = (lang === 'en' && sc.en) ? sc.en : sc;
+  // 坐标 / id 取自中文版，文案按当前语言合并（en 只提供 name/full/tag/desc/rows）
+  instruments = sc.instruments.map((zhIt, i) => Object.assign({}, zhIt, (src.instruments && src.instruments[i]) || {}));
+  rebuildIndex();
+  document.title = src.title;
+  if (window.__setCenterMode) window.__setCenterMode(sc.key === 'gongle');
+  // 乐器介绍背景：宫乐图用宫乐图本幅，其余保持原样
+  const vd = document.getElementById('view-detail');
+  if (vd) vd.classList.toggle('view-detail--gongle', sc.key === 'gongle');
+  // 展卷画卷图
+  const pimg = document.getElementById('paintingImg');
+  if (pimg) { pimg.src = sc.scrollImg; pimg.alt = src.ticketName + (lang === 'en' ? ' (whole scroll)' : '（整卷）'); }
+  // 热点 / 索引重渲
+  const painting = document.getElementById('painting');
+  if (painting) { painting.querySelectorAll('.hotspot').forEach(h => h.remove()); renderHotspots(); }
+  const grid = document.getElementById('indexGrid');
+  if (grid) { grid.innerHTML = ''; renderIndex(); }
+  // 开始界面文案 + 背景
+  const ic = document.getElementById('intro-content');
+  if (ic) {
+    const h1 = ic.querySelector('h1'); if (h1) h1.textContent = src.introTitle;
+    const sub = ic.querySelector('.sub'); if (sub) sub.textContent = src.introSub;
+    const desc = ic.querySelector('.desc'); if (desc) desc.innerHTML = src.introDesc;
+  }
+  const tb = document.querySelector('.toolbar--float .hint');
+  if (tb) tb.textContent = src.toolbar;
+  if (window.__setIntro) window.__setIntro(sc);
+  updateSwitchUI();
+}
+
+/* ============ 语言切换 ============ */
+function updateStatic() {
+  const t = I18N[lang];
+  document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+  const ws = document.querySelector('.welcome__seal'); if (ws) ws.textContent = t.welcomeSeal;
+  const wt = document.querySelector('.welcome__title'); if (wt) wt.textContent = t.welcomeTitle;
+  const wh = document.querySelector('.welcome__hint'); if (wh) wh.textContent = t.welcomeHint;
+  const fb = document.querySelector('.folder-tab-text'); if (fb) fb.textContent = t.welcomeTitle;
+  const ib = document.querySelector('#intro-start .sb-label'); if (ib) ib.textContent = t.introStart;
+  const ih = document.getElementById('intro-hint'); if (ih) ih.textContent = t.introHint;
+  const ph = document.querySelector('.pan-hint'); if (ph) ph.textContent = t.panHint;
+  const it = document.querySelector('.instrument-index h2'); if (it) it.textContent = t.indexTitle;
+  document.querySelectorAll('.scroll-switch button [data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n'); if (k && I18N[lang][k]) el.textContent = I18N[lang][k];
+  });
+  document.querySelectorAll('.lang-toggle button').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('data-lang') === lang));
+  updateWelcomeTickets();
+}
+function updateWelcomeTickets() {
+  const tt = document.getElementById('ttPop');
+  if (!tt) return;
+  tt.querySelectorAll('.tt').forEach(root => {
+    const scKey = root.__sceneKey; if (!scKey) return;
+    const sc = SCENES[scKey];
+    const src = (lang === 'en' && sc.en) ? sc.en : sc;
+    const h3 = root.querySelector('.tt__stub h3');
+    const p = root.querySelector('.tt__stub p');
+    const nm = root.querySelector('.tt__name');
+    if (h3) h3.textContent = src.ticketName;
+    if (p) p.textContent = src.ticketSub;
+    if (nm) nm.textContent = I18N[lang].cardName;
+  });
+}
+function applyLanguage() {
+  updateStatic();
+  activateScene(sceneKey);
+  const m = location.hash.match(/^#\/instrument\/(\w+)/);
+  if (m && byId[m[1]]) renderDetail(m[1]);
+  updateSwitchUI();
+}
+
+/* ============ 画卷间卷起/展开转场 ============ */
+let isSwitching = false;
+function switchSceneWithRoll(targetKey) {
+  if (isSwitching || targetKey === sceneKey) return;
+  isSwitching = true;
+  const painting = document.getElementById('painting');
+  if (!painting) { activateScene(targetKey); updateSwitchUI(); isSwitching = false; return; }
+  painting.classList.add('is-rolling');
+  setTimeout(() => {
+    activateScene(targetKey);
+    if (window.__recalcScroll) window.__recalcScroll();
+    const pimg = document.getElementById('paintingImg');
+    const done = () => {
+      if (window.__recalcScroll) window.__recalcScroll();
+      painting.classList.remove('is-rolling');
+      updateSwitchUI();
+      setTimeout(() => { isSwitching = false; }, 80);
+    };
+    if (pimg && !pimg.complete) pimg.addEventListener('load', done, { once: true });
+    else done();
+  }, 620);
+}
+function updateSwitchUI() {
+  const btns = document.querySelectorAll('.scroll-switch button');
+  btns.forEach(b => b.classList.toggle('active', b.getAttribute('data-scene') === sceneKey));
+}
+
+/* 语言切换按钮 */
+const langToggle = document.getElementById('langToggle');
+if (langToggle) langToggle.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  const l = b.getAttribute('data-lang'); if (!l || l === lang) return;
+  lang = l;
+  applyLanguage();
+});
+/* 画卷切换控件 */
+const scrollSwitch = document.getElementById('scrollSwitch');
+if (scrollSwitch) scrollSwitch.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  switchSceneWithRoll(b.getAttribute('data-scene'));
+});
+
+/* ============ 渲染画卷热点 ============ */
+function renderHotspots() {
+  const painting = document.getElementById("painting");
+  instruments.forEach((it) => {
+    const a = document.createElement("a");
+    a.className = "hotspot";
+    a.href = "#/instrument/" + it.id;
+    a.dataset.name = it.full;
+    a.style.left = it.x + "%";
+    a.style.top = it.y + "%";
+    a.setAttribute("aria-label", it.full);
+    a.innerHTML = '<span class="dot"></span>';
+    painting.appendChild(a);
+  });
+  // 画中主人光标（各场景可配，宫乐图无皇帝则省略）
+  const sc0 = cur();
+  const em = (lang === 'en' && sc0.en && sc0.en.emperor) ? sc0.en.emperor : sc0.emperor;
+  if (em) {
+    const emperor = document.createElement("a");
+    emperor.className = "hotspot emperor-hotspot";
+    emperor.href = "#";
+    emperor.style.left = em.x + "%";
+    emperor.style.top = em.y + "%";
+    emperor.setAttribute("aria-label", em.label);
+    emperor.innerHTML =
+      '<span class="dot"></span>'
+      + '<span class="emperor-label">' + em.label + '</span>'
+      + '<span class="emperor-tip">' + em.tip + '</span>';
+    painting.appendChild(emperor);
+  }
+}
+renderHotspots();
+
+/* ============ 渲染乐器索引 ============ */
+function renderIndex() {
+  const grid = document.getElementById("indexGrid");
+  if (!grid) return;
+  instruments.forEach((it, i) => {
+    const a = document.createElement("a");
+    a.className = "index-item";
+    a.href = "#/instrument/" + it.id;
+    a.innerHTML = '<span class="in-num">' + String(i + 1).padStart(2, "0") + '</span>'
+      + '<span class="in-name">' + it.name + '</span>'
+      + '<span class="in-tag">' + it.tag + '</span>';
+    grid.appendChild(a);
+  });
+}
+renderIndex();
+
+/* ============ 通用缩放 / 平移组件 ============ */
+function zoomable(stage, contentEl, contain, minScale) {
+  minScale = minScale || 1;
+  let s = 1, tx = 0, ty = 0, suppressClick = false;
+  const viewW = stage.clientWidth;
+  const viewH = stage.clientHeight;
+  const img = contentEl.querySelector("img");
+  // 基础显示尺寸：fill=铺满容器宽（画卷）；contain=整件放入舞台（详情乐器）
+  let baseW = 1, baseH = 1;
+  function compute() {
+    const natA = (img && img.naturalWidth) ? (img.naturalHeight / img.naturalWidth) : 1;
+    if (contain) {
+      baseW = viewH / natA;
+      if (baseW > viewW) baseW = viewW;
+      baseH = baseW * natA;
+      if (baseH > viewH) { baseH = viewH; baseW = baseH / natA; }
+    } else {
+      baseW = viewW; baseH = baseW * natA;
+    }
+    contentEl.style.width = baseW + "px";
+  }
+  compute();
+  const apply = () => { contentEl.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + s + ")"; };
+  const clamp = () => {
+    const W = baseW * s, H = baseH * s;
+    tx = Math.max((W > viewW ? viewW - W : 0), Math.min((W > viewW ? 0 : (viewW - W) / 2), tx));
+    ty = Math.max((H > viewH ? viewH - H : 0), Math.min((H > viewH ? 0 : (viewH - H) / 2), ty));
+  };
+  const fit = () => {
+    s = 1;
+    tx = (baseW > viewW ? 0 : (viewW - baseW) / 2);
+    ty = (baseH > viewH ? 0 : (viewH - baseH) / 2);
+    clamp(); apply();
+  };
+  const zoomAt = (f, cx, cy) => {
+    const ns = Math.max(minScale, Math.min(8, s * f));
+    tx = cx - (cx - tx) * (ns / s);
+    ty = cy - (cy - ty) * (ns / s);
+    s = ns; clamp(); apply();
+  };
+  const rect = () => stage.getBoundingClientRect();
+
+  // 滚轮缩放
+  stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = rect();
+    zoomAt(e.deltaY < 0 ? 1.16 : 1 / 1.16, e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+
+  // 指针拖动 + 双指缩放
+  const pointers = {};
+  let lastDist = 0, dragging = false;
+  let startX = 0, startY = 0, startTX = 0, startTY = 0;
+
+  stage.addEventListener("pointerdown", (e) => {
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (Object.keys(pointers).length === 1) {
+      dragging = true; suppressClick = false;
+      startX = e.clientX; startY = e.clientY; startTX = tx; startTY = ty;
+    }
+    lastDist = 0;
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (!(e.pointerId in pointers)) return;
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    const ids = Object.keys(pointers);
+    if (ids.length >= 2) {
+      const p0 = pointers[ids[0]], p1 = pointers[ids[1]];
+      const d = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+      const mx = (p0.x + p1.x) / 2, my = (p0.y + p1.y) / 2;
+      const r = rect();
+      if (lastDist > 0) zoomAt(d / lastDist, mx - r.left, my - r.top);
+      lastDist = d;
+      dragging = false;
+    } else if (dragging) {
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      if (Math.abs(dx) + Math.abs(dy) > 3) suppressClick = true;
+      tx = startTX + dx; ty = startTY + dy; clamp(); apply();
+    }
+  });
+  const up = (e) => {
+    delete pointers[e.pointerId];
+    if (Object.keys(pointers).length < 2) lastDist = 0;
+    if (Object.keys(pointers).length === 0) dragging = false;
+  };
+  stage.addEventListener("pointerup", up);
+  stage.addEventListener("pointercancel", up);
+  // 拖拽后抑制误触发的点击
+  stage.addEventListener("click", (e) => {
+    if (suppressClick) { e.preventDefault(); e.stopPropagation(); suppressClick = false; }
+  }, true);
+
+  if (img && !img.complete) {
+    img.addEventListener("load", () => { compute(); fit(); }, { once: true });
+  }
+
+  fit();
+  return {
+    zoomIn: () => zoomAt(1.3, viewW / 2, viewH / 2),
+    zoomOut: () => zoomAt(1 / 1.3, viewW / 2, viewH / 2),
+    fit
+  };
+}
+
+/* ============ 全屏横向展卷（滚轮→横滚 / 拖拽 / lerp） ============ */
+(function () {
+  const viewport = document.getElementById('scrollViewport');
+  const track = document.getElementById('scrollTrack');
+  const wrapper = document.getElementById('painting');
+  const img = document.getElementById('paintingImg');
+  if (!viewport || !track || !wrapper) return;
+  let centerMode = false;
+  let targetX = 0, currentX = 0, maxScroll = 0;
+  function updateBounds() {
+    maxScroll = Math.max(0, wrapper.offsetWidth - window.innerWidth);
+    if (centerMode) {
+      if (maxScroll <= 0) {
+        // 整幅不超宽：画卷水平居中显示（不滚动），彻底解决宫乐图贴左
+        track.style.justifyContent = 'center';
+        targetX = 0; currentX = 0;
+      } else {
+        // 超宽：画卷横向居中（滚到正中），可再左右平移
+        track.style.justifyContent = 'flex-start';
+        targetX = maxScroll / 2;
+        currentX = targetX;
+      }
+      track.style.transform = 'translate3d(' + (-currentX).toFixed(2) + 'px,0,0)';
+    } else {
+      track.style.justifyContent = 'flex-start';
+      targetX = Math.max(0, Math.min(targetX, maxScroll));
+    }
+  }
+  if (img) img.addEventListener('load', updateBounds);
+  updateBounds();
+  window.addEventListener('resize', updateBounds);
+
+  function centerScroll() {
+    if (!centerMode) return;
+    auto = false;
+    updateBounds();
+  }
+  window.__setCenterMode = function (v) {
+    centerMode = !!v;
+    if (centerMode) centerScroll();
+  };
+  window.__centerScroll = centerScroll;
+
+  /* 空闲自动缓慢滚动：静止 3.5s 后自动往返横移，交互时暂停，空闲后恢复（居中模式跳过） */
+  let auto = true, autoDir = 1, lastActive = -1e9;
+  const AUTO_SPEED = 0.18; // px / 帧 ≈ 11px/s
+  function userActive() { auto = false; lastActive = performance.now(); }
+
+  viewport.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    userActive();
+    targetX += e.deltaY * 1.2;
+    targetX = Math.max(0, Math.min(targetX, maxScroll));
+  }, { passive: false });
+
+  let isDown = false, startClientX = 0, startScrollX = 0;
+  viewport.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.hotspot')) return;
+    userActive();
+    isDown = true;
+    startClientX = e.clientX;
+    startScrollX = targetX;
+    viewport.style.cursor = 'grabbing';
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!isDown) return;
+    const dx = e.clientX - startClientX;
+    targetX = startScrollX - (dx * 1.5);
+    targetX = Math.max(0, Math.min(targetX, maxScroll));
+  });
+  window.addEventListener('pointerup', () => { isDown = false; viewport.style.cursor = 'grab'; });
+  window.addEventListener('pointercancel', () => { isDown = false; viewport.style.cursor = 'grab'; });
+
+  (function animate(now) {
+    if (!centerMode && auto && maxScroll > 0) {
+      targetX += autoDir * AUTO_SPEED;
+      if (targetX >= maxScroll) { targetX = maxScroll; autoDir = -1; }
+      else if (targetX <= 0) { targetX = 0; autoDir = 1; }
+    } else if (!centerMode && !auto && (now - lastActive) > 3500 && maxScroll > 0) {
+      auto = true;
+    }
+    currentX += (targetX - currentX) * 0.08;
+    track.style.transform = 'translate3d(' + (-currentX).toFixed(2) + 'px,0,0)';
+    requestAnimationFrame(animate);
+  })(performance.now());
+
+  window.__resetScroll = () => {
+    if (centerMode) { updateBounds(); targetX = Math.max(0, Math.min(maxScroll, maxScroll / 2)); currentX = targetX; track.style.transform = 'translate3d(' + (-currentX).toFixed(2) + 'px,0,0)'; }
+    else { targetX = 0; autoDir = 1; }
+  };
+  window.__recalcScroll = updateBounds;
+})();
+
+/* ============ 详情渲染 ============ */
+function renderDetail(id) {
+  const it = byId[id];
+  const wrap = document.getElementById("detailWrap");
+  if (!it) { window.location.hash = "#/"; return; }
+  const isGongle = sceneKey === 'gongle';
+  const prev = instruments[(it.index - 1 + instruments.length) % instruments.length];
+  const next = instruments[(it.index + 1) % instruments.length];
+  let rowsHtml = it.rows.map((r, i) =>
+    '<div class="info-row reveal" style="transition-delay:' + (0.30 + i * 0.06) + 's"><span class="label">' + r[0] + '</span><span class="value">' + r[1] + '</span></div>'
+  ).join("");
+  const t = I18N[lang];
+  wrap.innerHTML =
+    '<div class="detail-top reveal" style="transition-delay:.05s">'
+    + '<a class="back-link" href="#/" aria-label="' + t.back + '">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg>' + t.back + '</a>'
+    + '</div>'
+    + '<button type="button" class="detail-close" id="detailClose" aria-label="' + t.exit + '">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' + t.exit + '</button>'
+    + '<article class="instrument-card">'
+    + '<div class="detail-tools reveal" style="transition-delay:.12s">'
+    + '<button type="button" id="dzOut" class="btn btn--sm btn--outline" aria-label="' + t.zoomOut + '">' + t.zoomOut + '</button>'
+    + '<button type="button" id="dzFit" class="btn btn--sm btn--primary">' + t.zoomFit + '</button>'
+    + '<button type="button" id="dzIn" class="btn btn--sm btn--outline" aria-label="' + t.zoomIn + '">' + t.zoomIn + '</button>'
+    + '</div>'
+    + '<div class="detail-zoom reveal" style="transition-delay:.18s" id="detailZoom"><div class="detail-canvas" id="detailCanvas">'
+    + '<div class="detail-content" id="detailContent">' + (isGongle
+        ? '<div class="attached-card"><img src="assets/' + it.id + '.png" alt="' + it.full + '" draggable="false"></div>'
+        : '<img src="assets/' + it.id + '.png" alt="' + it.full + '">') + '</div>'
+    + '</div><span class="detail-zoom-hint">' + t.zoomHint + '</span></div>'
+    + '<div class="card-head reveal" style="transition-delay:.24s"><h2>' + it.full + '</h2><span class="instrument-tag">' + it.tag + '</span></div>'
+    + '<p class="instrument-desc reveal" style="transition-delay:.30s">' + it.desc + '</p>'
+    + rowsHtml
+    + '</article>'
+    + '<div class="detail-nav reveal" style="transition-delay:' + (0.32 + it.rows.length * 0.06) + 's">'
+    + '<a href="#/instrument/' + prev.id + '" class="prev">← ' + prev.name + '</a>'
+    + '<a href="#/instrument/' + next.id + '" class="next">' + next.name + ' →</a>'
+    + '</div>';
+
+  // 悬浮退出按键 → 返回画卷
+  const closeBtn = document.getElementById("detailClose");
+  if (closeBtn) closeBtn.addEventListener("click", () => { location.hash = "#/"; });
+
+  // scroll reveal：详情内容滚动显现（进入视口 → +.in），仅一次
+  if (!window.__revealObs) {
+    window.__revealObs = new IntersectionObserver((es) => {
+      es.forEach(en => {
+        if (en.isIntersecting) { en.target.classList.add('in'); window.__revealObs.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+  }
+  const rv = window.__revealObs;
+  rv.disconnect();
+  wrap.querySelectorAll('.reveal').forEach(el => rv.observe(el));
+
+  // 详情图可缩放平移（contain：整件放入舞台），并绑定缩放按钮
+  // 必须等详情视图 display 变为可见后再初始化，否则 clientWidth/Height 为 0
+  const dz = document.getElementById("detailZoom");
+  const content = document.getElementById("detailContent");
+  const boot = () => {
+    const ctrl = zoomable(dz, content, true, 0.5);
+    document.getElementById("dzIn").addEventListener("click", ctrl.zoomIn);
+    document.getElementById("dzOut").addEventListener("click", ctrl.zoomOut);
+    document.getElementById("dzFit").addEventListener("click", ctrl.fit);
+  };
+  // 延迟到视图可见、且图片尺寸就绪后再启动，保证整件放入并可自由缩放
+  setTimeout(boot, 0);
+}
+
+/* ============ 路由 ============ */
+function route() {
+  const hash = location.hash || "#/";
+  const m = hash.match(/^#\/instrument\/(\w+)/);
+  const showScroll = document.getElementById("view-scroll");
+  const showDetail = document.getElementById("view-detail");
+  if (m) {
+    renderDetail(m[1]);
+    showDetail.classList.add("active");
+    showScroll.classList.remove("active");
+    document.body.classList.remove("page-leaving");
+    // 详情视图：恢复原生滚动以阅读正文
+    document.documentElement.style.overflow = 'auto';
+    document.body.style.overflow = 'auto';
+    window.scrollTo(0, 0);
+    // Carousel 式切换：prev/next 用 tilt 卡片转场进入；进入画卷/退出用淡入上移
+    const carouselDir = window.__carouselDir || 0;
+    window.__carouselDir = 0;
+    const detailWrapEl = document.getElementById("detailWrap");
+    const cardEl = detailWrapEl.querySelector('.instrument-card');
+    if (carouselDir && cardEl) {
+      cardEl.classList.remove("carousel-out", "carousel-in", "to-next", "to-prev");
+      cardEl.style.setProperty('--carousel-in-x', carouselDir > 0 ? '-42px' : '42px');
+      cardEl.classList.add("carousel-in");
+      // 转场期间直接显形，避免内容空白；转场即入场动效
+      detailWrapEl.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+    } else {
+      detailWrapEl.classList.remove("detail-enter");
+      void detailWrapEl.offsetWidth;
+      detailWrapEl.classList.add("detail-enter");
+    }
+    const scN = cur();
+    document.title = byId[m[1]] ? byId[m[1]].full + " · " + ((lang === 'en' && scN.en) ? scN.en.ticketName : scN.ticketName) : document.title;
+  } else {
+    showScroll.classList.add("active");
+    showDetail.classList.remove("active");
+    document.body.classList.remove("page-leaving");
+    // 画卷视图：锁定原生滚动，保持全屏横向展卷
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    if (window.__recalcScroll) window.__recalcScroll();
+    if (window.__centerScroll) window.__centerScroll(); // 宫乐图居中
+    const scT = cur();
+    document.title = (lang === 'en' && scT.en) ? scT.en.title : scT.title;
+  }
+}
+window.addEventListener("hashchange", route);
+
+/* 乐器详情 prev/next：Carousel tilt 卡片转场（先翻出，再换内容翻入） */
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("#view-detail a.prev, #view-detail a.next");
+  if (!a) return;
+  const href = a.getAttribute("href");
+  if (!href) return;
+  const dir = a.classList.contains("next") ? 1 : -1;
+  e.preventDefault();
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const wrap = document.getElementById("detailWrap");
+  if (reduce) { location.hash = href; return; }
+  const card = wrap ? wrap.querySelector('.instrument-card') : null;
+  if (card) {
+    card.classList.remove("carousel-out", "carousel-in", "to-next", "to-prev");
+    card.classList.add("carousel-out", dir > 0 ? "to-next" : "to-prev");
+  }
+  window.__carouselDir = dir;
+  setTimeout(() => { location.hash = href; }, 180);
+});
+
+/* 热点点击：乐器跳详情；皇帝光标切换宫乐图提示卡 */
+document.addEventListener("click", (e) => {
+  const a = e.target.closest(".hotspot");
+  if (!a) return;
+  if (a.classList.contains("emperor-hotspot")) {
+    e.preventDefault();
+    document.querySelectorAll(".emperor-hotspot.open").forEach(o => { if (o !== a) o.classList.remove("open"); });
+    a.classList.toggle("open");
+    return;
+  }
+  const url = a.getAttribute("href");
+  if (!url || url === "#") return;
+  e.preventDefault();
+  location.hash = url;
+});
+
+/* ============ 开场帷幕 ============ */
+window.addEventListener('load', () => {
+  const curtain = document.getElementById('curtain');
+  if (!curtain) return;
+  setTimeout(() => curtain.classList.add('open'), 400);
+  setTimeout(() => curtain.remove(), 2200);
+});
+
+route();
+
+/* ============ 文件夹 + 双票根（合乐图 / 宫乐图）撕票交互 ============ */
+(function () {
+  const folder = document.getElementById('folderRoot');
+  const ttPop = document.getElementById('ttPop');
+  if (!folder || !ttPop) return;
+  const fstage = folder.querySelector('.folder-stage');
+
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const rad = d => d * Math.PI / 180;
+  const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+  const noise = seed => { let s = seed | 0; return () => {
+    s = (s + 0x6d2b79f5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const ff = n => (n === undefined || n === null ? 0 : n).toFixed(2);
+  const W = 460, H = 250, S = 150, R = 16, HOLES = 12, HOLE = 6, NOTCH = 3, ROUGH = 0;
+  const TEAR_ANGLE = 30, STRETCH = 28, RESISTANCE = 0.4;
+
+  function buildGeometry() {
+    const x = W - S, hr = HOLE / 2, n = Math.max(1, Math.round(HOLES));
+    const span = H - 2 * NOTCH, bridge = Math.max(2, (span - n * HOLE) / (n + 1));
+    const random = noise(n * 7919 + Math.round(H));
+    const pt = (u, v) => ff(u) + ',' + ff(v);
+    const arc = (r, sw, u, v) => 'A' + ff(r) + ',' + ff(r) + ' 0 0 ' + sw + ' ' + pt(u, v);
+    const bridges = [];
+    for (let i = 0; i <= n; i++) {
+      const y0 = NOTCH + i * (bridge + HOLE), y1 = y0 + bridge;
+      const steps = Math.max(2, Math.round(bridge / 2.2)); const pts = [];
+      for (let k = 1; k < steps; k++) pts.push([x + (random() - 0.5) * 2 * ROUGH, y0 + bridge * k / steps]);
+      bridges.push({ y0: y0, y1: y1, mid: (y0 + y1) / 2, y: (y0 + y1) / 2, pts: pts, x: x });
+    }
+    let body = 'M' + pt(R, 0) + 'L' + pt(x - NOTCH, 0) + arc(NOTCH, 0, x, NOTCH);
+    bridges.forEach((b, i) => {
+      b.pts.forEach(p => body += 'L' + pt(p[0], p[1]));
+      body += 'L' + pt(x, b.y1); if (i < n) body += arc(hr, 0, x, b.y1 + HOLE);
+    });
+    body += arc(NOTCH, 0, x - NOTCH, H) + 'L' + pt(R, H) + arc(R, 1, 0, H - R) + 'L' + pt(0, R) + arc(R, 1, R, 0) + 'Z';
+    let stub = 'M' + pt(x + NOTCH, 0) + 'L' + pt(W - R, 0) + arc(R, 1, W, R) + 'L' + pt(W, H - R) + arc(R, 1, W - R, H) + 'L' + pt(x + NOTCH, H) + arc(NOTCH, 0, x, H - NOTCH);
+    for (let i = n; i >= 0; i--) {
+      const b = bridges[i];
+      for (let k = b.pts.length - 1; k >= 0; k--) stub += 'L' + pt(b.pts[k][0], b.pts[k][1]);
+      stub += 'L' + pt(x, b.y0); if (i > 0) stub += arc(hr, 0, x, b.y0 - HOLE);
+    }
+    stub += arc(NOTCH, 0, x + NOTCH, 0) + 'Z';
+    const bodyOutline = 'M' + pt(x, H - NOTCH) + arc(NOTCH, 0, x - NOTCH, H) + 'L' + pt(R, H) + arc(R, 1, 0, H - R) + 'L' + pt(0, R) + arc(R, 1, R, 0) + 'L' + pt(x - NOTCH, 0) + arc(NOTCH, 0, x, NOTCH);
+    const stubOutline = 'M' + pt(x, NOTCH) + arc(NOTCH, 0, x + NOTCH, 0) + 'L' + pt(W - R, 0) + arc(R, 1, W, R) + 'L' + pt(W, H - R) + arc(R, 1, W - R, H) + 'L' + pt(x + NOTCH, H) + arc(NOTCH, 0, x, H - NOTCH);
+    return { body: body, stub: stub, bridges: bridges, bodyOutline: bodyOutline, stubOutline: stubOutline, cross: H };
+  }
+
+  // 每张票根自成一体：独立 geo / 状态 / 撕裂交互，撕开即进入对应场景
+  function buildTicket(scene) {
+    const geo = buildGeometry();
+    function el(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
+    const root = el('div', 'tt'), stage = el('div', 'tt__stage'), plane = el('div', 'tt__plane');
+    const bodyPiece = el('div', 'tt__piece');
+    const bodyEdge = el('svg', 'tt__edge'); bodyEdge.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    const bodyEdgePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    bodyEdgePath.setAttribute('d', geo.bodyOutline); bodyEdge.appendChild(bodyEdgePath);
+    const bodyPaper = el('div', 'tt__paper'); bodyPaper.style.clipPath = "path('" + geo.body + "')";
+    const art = el('div', 'tt__art');
+    const image = el('img', 'tt__image'); image.src = scene.img; image.alt = scene.ticketAlt; image.draggable = false;
+    const scrim = el('div', 'tt__scrim');
+    art.appendChild(image); art.appendChild(scrim);
+    const content = el('div', 'tt__content');
+    const tname = el('span', 'tt__name'); tname.textContent = '中国古画中的民乐';
+    content.appendChild(tname);
+    bodyPaper.appendChild(art); bodyPaper.appendChild(content);
+    bodyPiece.appendChild(bodyEdge); bodyPiece.appendChild(bodyPaper);
+    const fibresSvg = el('svg', 'tt__fibres');
+    const fibres = [];
+    geo.bridges.forEach(() => {
+      const a = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const b = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      fibresSvg.appendChild(a); fibresSvg.appendChild(b); fibres.push(a, b);
+    });
+    const stubPiece = el('div', 'tt__piece tt__piece--stub');
+    stubPiece.setAttribute('role', 'button'); stubPiece.setAttribute('tabindex', '0'); stubPiece.setAttribute('aria-label', '撕下票根：' + scene.ticketName);
+    const stubEdge = el('svg', 'tt__edge'); stubEdge.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    const stubEdgePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    stubEdgePath.setAttribute('d', geo.stubOutline); stubEdge.appendChild(stubEdgePath);
+    const stubPaper = el('div', 'tt__paper tt__paper--stub'); stubPaper.style.clipPath = "path('" + geo.stub + "')";
+    const stubBox = el('div', 'tt__stub');
+    const sh3 = el('h3'); sh3.textContent = scene.ticketName;
+    const sp = el('p'); sp.textContent = scene.ticketSub;
+    const ss = el('span'); ss.textContent = scene.ticketNo;
+    stubBox.appendChild(sh3); stubBox.appendChild(sp); stubBox.appendChild(ss);
+    stubPaper.appendChild(stubBox);
+    stubPiece.appendChild(stubEdge); stubPiece.appendChild(stubPaper);
+    plane.appendChild(bodyPiece); plane.appendChild(fibresSvg); plane.appendChild(stubPiece);
+    stage.appendChild(plane); root.appendChild(stage);
+
+    const limit = rad(TEAR_ANGLE);
+    const s = {
+      id: null, sign: 1,
+      hinge: { x: 0, y: 0 }, hingeV: 0,
+      start: { x: 0, y: 0 }, point: { x: 0, y: 0 },
+      a0: 0, theta: 0, sx: 0, sy: 0,
+      snapped: [], span: []
+    };
+    geo.bridges.forEach(() => { s.snapped.push(false); s.span.push(0); });
+    let torn = false, done = false;
+
+    function local(e) {
+      const r = stage.getBoundingClientRect(); const k = r.width / W || 1;
+      return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k };
+    }
+    function allTorn() { return s.snapped.every(Boolean); }
+    function applyStub() {
+      stubPiece.style.transform = 'translate(' + s.sx.toFixed(2) + 'px,' + s.sy.toFixed(2) + 'px) rotate(' + (s.theta * s.sign * 180 / Math.PI).toFixed(2) + 'deg)';
+    }
+    function hideFibres() { fibres.forEach(p => { p.style.opacity = '0'; }); }
+    function paintFibres() {
+      const cos = Math.cos(s.theta * s.sign), sin = Math.sin(s.theta * s.sign);
+      geo.bridges.forEach((b, i) => {
+        const dx = b.x - s.hinge.x, dy = b.y - s.hinge.y;
+        const tx = s.hinge.x + dx * cos - dy * sin + s.sx;
+        const ty = s.hinge.y + dx * sin + dy * cos + s.sy;
+        const gx = tx - b.x, gy = ty - b.y, gap = Math.hypot(gx, gy);
+        const near = fibres[i * 2], far = fibres[i * 2 + 1];
+        if (gap < 0.4) { near.style.opacity = '0'; far.style.opacity = '0'; return; }
+        const k = clamp(gap / STRETCH, 0, 1), sag = gap * 0.16;
+        const w = (1.7 - 1.1 * k).toFixed(2);
+        near.setAttribute('d', 'M' + ff(b.x) + ',' + ff(b.y - 1.5) + 'Q' + ff(b.x + gx / 2) + ',' + ff(b.y - 1.5 + sag + gy / 2) + ' ' + ff(tx) + ',' + ff(ty - 1.5));
+        far.setAttribute('d', 'M' + ff(b.x) + ',' + ff(b.y + 1.5) + 'Q' + ff(b.x + gx / 2) + ',' + ff(b.y + 1.5 + gy - sag / 2) + ' ' + ff(tx) + ',' + ff(ty + 1.5));
+        near.style.strokeWidth = w; far.style.strokeWidth = w;
+        near.style.opacity = '1'; far.style.opacity = '1';
+        s.span[i] = gap;
+      });
+    }
+    /* 拖动时同步计算（pointermove），不依赖 rAF */
+    function heldCompute() {
+      const dx0 = s.point.x - s.start.x, dy0 = s.point.y - s.start.y;
+      const a = Math.atan2(s.point.y - s.hinge.y, s.point.x - s.hinge.x);
+      let intact = 0; for (const z of s.snapped) if (!z) intact++;
+      const hold = intact / s.snapped.length;
+      const follow = 0.92 * (1 - clamp(RESISTANCE, 0, 0.9) * hold);
+      const want = clamp(wrap(a - s.a0) * s.sign * follow, 0, limit + 0.08);
+      s.theta = want;
+      s.sx = clamp(dx0 * 0.62, -16, 80); s.sy = clamp(dy0 * 0.62, -80, 80);
+      geo.bridges.forEach((b, i) => {
+        if (s.snapped[i]) return;
+        const d = Math.abs(b.mid - s.hingeV);
+        const rot = 2 * d * Math.sin(s.theta / 2);
+        if (rot + Math.hypot(s.sx, s.sy) > STRETCH || s.theta >= limit) {
+          s.snapped[i] = true; s.span[i] = Math.max(rot, Math.hypot(s.sx, s.sy));
+        }
+      });
+      applyStub(); paintFibres();
+    }
+    function onDown(e) {
+      if (torn || e.button !== 0 || s.id !== null) return;
+      try { stubPiece.setPointerCapture(e.pointerId); } catch (err) {}
+      const p = local(e);
+      s.id = e.pointerId; s.start = p; s.point = p;
+      stubPiece.style.transition = 'none';
+      if (s.theta < 0.01) {
+        const far = p.y < geo.cross / 2;
+        const end = geo.bridges[far ? geo.bridges.length - 1 : 0];
+        s.sign = far ? 1 : -1;
+        s.hinge = { x: end.x, y: far ? H - NOTCH : NOTCH };
+        s.hingeV = end.mid;
+        stubPiece.style.transformOrigin = s.hinge.x + 'px ' + s.hinge.y + 'px';
+      }
+      s.a0 = Math.atan2(p.y - s.hinge.y, p.x - s.hinge.x) - s.theta * s.sign;
+    }
+    function onMove(e) {
+      if (s.id !== e.pointerId) return;
+      s.point = local(e);
+      heldCompute();
+    }
+    function onUp(e) {
+      if (s.id !== null && e.pointerId !== s.id) return;
+      s.id = null;
+      try { if (stubPiece.hasPointerCapture(e.pointerId)) stubPiece.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (allTorn()) {
+        /* CSS transition 掉落（不依赖 rAF），setTimeout 保证 finish */
+        const dir = s.sign * 50;
+        stubPiece.style.transition = 'transform .55s cubic-bezier(.45,.05,.7,.3), opacity .55s ease-in';
+        stubPiece.style.transform = 'translate(72px,230px) rotate(' + dir + 'deg)';
+        stubPiece.style.opacity = '0';
+        fibresSvg.style.transition = 'opacity .5s ease';
+        fibresSvg.style.opacity = '0';
+        setTimeout(finish, 580);
+      } else {
+        /* 未撕裂：票根回位 */
+        stubPiece.style.transition = 'transform .32s ease, opacity .32s ease';
+        stubPiece.style.transform = 'translate(0px,0px) rotate(0deg)';
+        stubPiece.style.opacity = '1';
+        s.theta = 0; s.sx = 0; s.sy = 0;
+        setTimeout(hideFibres, 340);
+      }
+    }
+    function finish() {
+      stubPiece.style.visibility = 'hidden';
+      if (torn) return;
+      torn = true;
+      setTimeout(enterFromTicket, 480);
+    }
+    function tearNow() {
+      s.snapped = s.snapped.map(() => true);
+      stubPiece.style.visibility = 'hidden';
+      hideFibres();
+      finish();
+    }
+    stubPiece.addEventListener('pointerdown', onDown);
+    stubPiece.addEventListener('pointermove', onMove);
+    stubPiece.addEventListener('pointerup', onUp);
+    stubPiece.addEventListener('pointercancel', onUp);
+    stubPiece.addEventListener('keydown', e => {
+      if (torn || (e.key !== 'Enter' && e.key !== ' ')) return;
+      e.preventDefault(); if (!e.repeat) tearNow();
+    });
+    stubPiece.addEventListener('dragstart', e => e.preventDefault());
+
+    function enterFromTicket() {
+      if (done) return;
+      done = true;
+      activateScene(scene.key);            // 先切到对应场景：换画、热点、乐器简介、intro
+      const r = art.getBoundingClientRect();
+      const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+      const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+      const zoom = document.createElement('div');
+      zoom.className = 'tt-zoom';
+      const zimg = document.createElement('img');
+      zimg.src = scene.img; zimg.alt = scene.ticketAlt;
+      zoom.appendChild(zimg);
+      document.body.appendChild(zoom);
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const sc = Math.max(0.05, Math.min(r.width / vw, r.height / vh));
+      zoom.style.opacity = '1';
+      zoom.style.transform = 'translate(' + (cx - vw / 2).toFixed(0) + 'px,' + (cy - vh / 2).toFixed(0) + 'px) scale(' + sc.toFixed(3) + ')';
+      void zoom.offsetWidth; // 强制回流：确保放大起点已绘制，转场才平滑触发而非瞬间跳变
+      zoom.style.transform = 'translate(0px,0px) scale(1)';
+      setTimeout(function () { zoom.classList.add('fade'); }, 1060);
+      setTimeout(function () { if (zoom.parentNode) zoom.parentNode.removeChild(zoom); }, 1800);
+      const welcome = document.getElementById('welcome');
+      if (welcome) {
+        welcome.classList.add('hide');
+        setTimeout(function () {
+          if (welcome.parentNode) welcome.parentNode.removeChild(welcome);
+          // 放大收尾与开始界面淡入重叠衔接：内容淡入上移 24px，只一次
+          const ic = document.getElementById('intro-content');
+          if (ic) ic.classList.add('in');
+        }, 1000);
+      }
+    }
+
+    root.__sceneKey = scene.key;
+    return root;
+  }
+
+  // 两张票根并排供选择：合乐图 / 宫乐图
+  [SCENES.hele, SCENES.gongle].forEach(function (sc) { ttPop.appendChild(buildTicket(sc)); });
+
+  let opened = false;
+  function openFolder() {
+    if (opened) return;
+    opened = true;
+    folder.toggleAttribute('data-open', true);
+    setTimeout(function () { ttPop.classList.add('show'); }, 300);
+  }
+  fstage.addEventListener('click', openFolder);
+  fstage.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFolder(); }
+  });
+})();
+
+// 初始化默认场景（合乐图）：重渲热点/索引并配置开始界面背景
+activateScene(sceneKey);
+</script>
+<script src="assets/line-waves.js"></script>
+<script src="assets/koi-school.js"></script>
+<script src="assets/holo-card.js"></script>
+<script src="assets/buttons.js"></script>
+</body>
+</html>
