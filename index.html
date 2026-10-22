@@ -165,8 +165,8 @@ a { color: var(--qing-deep); text-decoration: none; }
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.toolbar button:hover { color: var(--ink); border-color: rgba(232,200,122,.6); background: rgba(232,200,122,.1); }
-.toolbar button.primary { border-color: rgba(111,143,140,.55); color: var(--qing-deep); background: rgba(111,143,140,.12); }
+.toolbar button:hover { color: var(--ink); border-color: rgba(232,200,122,.6); }
+.toolbar button.primary { border-color: rgba(111,143,140,.55); color: var(--qing-deep); }
 .toolbar .hint {
   font-size: 12px;
   color: var(--ink-faint);
@@ -193,15 +193,26 @@ a { color: var(--qing-deep); text-decoration: none; }
   background: radial-gradient(ellipse at center, transparent 40%, rgba(10,8,6,0.72) 100%);
   z-index: 50;
 }
-/* 画卷轨道：横向位移（宽=视口，短画幅由 JS 切换 justify-content 实现水平居中） */
+/* 画卷轨道：原生横向滚动容器（滚动条隐藏），视差由 JS 在内部层上叠加 */
 .scroll-track {
   position: absolute;
   top: 0; left: 0;
   width: 100%;
   height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scroll-track::-webkit-scrollbar { display: none; }
+/* 视差移动层：滚动时叠加 0.2x 偏移 → 画卷/热点总速度 1.2x；短画幅由 JS 切换居中 */
+.scroll-track-inner {
   display: flex;
+  align-items: center;
   justify-content: flex-start;
-  will-change: transform;
+  min-width: 100%;
+  height: 100%;
+  will-change: transform, opacity;
 }
 /* 画卷容器：高=屏高，宽由画幅比例撑开 */
 .painting-wrapper {
@@ -576,6 +587,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   overflow: hidden;
   pointer-events: none;
   opacity: 0.5;
+  will-change: transform, opacity;
 }
 .koi-canvas {
   position: absolute;
@@ -613,7 +625,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   padding: 9px 16px;
   border: 1px solid rgba(232,200,122,.35);
   border-radius: 999px;
-  background: rgba(24,19,14,.42);
+  background: transparent;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   color: #e8c87a;
@@ -623,7 +635,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 }
 .detail-close svg { width: 15px; height: 15px; }
 .detail-close:hover {
-  background: rgba(232,200,122,.9); color: #2a2016;
+  color: #e8c87a;
   border-color: rgba(232,200,122,.9);
   box-shadow: 0 8px 26px rgba(0,0,0,.35);
   transform: translateY(-1px);
@@ -655,8 +667,8 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.detail-tools button:hover { color: var(--ink); background: rgba(185,140,62,.14); border-color: rgba(185,140,62,.45); }
-.detail-tools button.primary { color: var(--qing-deep); background: rgba(111,143,140,.16); border-color: rgba(111,143,140,.5); }
+.detail-tools button:hover { color: var(--ink); border-color: rgba(232,200,122,.6); }
+.detail-tools button.primary { color: var(--qing-deep); border-color: rgba(111,143,140,.5); }
 .detail-zoom {
   position: relative;
   width: 100%;
@@ -1268,7 +1280,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   border-radius: var(--radius-sm);
   padding: 8px 18px;
   color: var(--ink-soft);
-  background: var(--card);
+  background: transparent;
   transition: transform .18s var(--ease-out), box-shadow .22s var(--ease-out),
               background-color .2s ease, color .2s ease, border-color .2s ease;
   will-change: transform;
@@ -1279,24 +1291,24 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
 }
 .btn.btn--primary {
-  background: linear-gradient(180deg, #c39a4a, #a97f2e);
-  color: var(--primary-foreground);
-  border-color: rgba(138,106,36,.55);
-  box-shadow: var(--shadow-gold);
+  background: transparent;
+  color: #b98c3e;
+  border-color: rgba(232,200,122,.45);
+  box-shadow: none;
 }
 .btn.btn--primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 30px rgba(185,140,62,.42);
+  box-shadow: none;
 }
 .btn.btn--outline { background: transparent; color: var(--ink-soft); border-color: rgba(232,200,122,.32); }
-.btn.btn--outline:hover { color: var(--ink); border-color: rgba(232,200,122,.6); background: rgba(232,200,122,.12); transform: translateY(-1px); box-shadow: none; }
+.btn.btn--outline:hover { color: var(--ink); border-color: rgba(232,200,122,.6); transform: translateY(-1px); box-shadow: none; }
 .btn.btn--ghost { background: transparent; color: var(--ink-soft); border-color: transparent; }
 .btn.btn--ghost:hover { color: var(--ink); background: rgba(0,0,0,.05); }
 .btn.btn--destructive { background: var(--destructive); color: #fff; border-color: #8c3026; }
 .btn.btn--sm { font-size: 12px; padding: 5px 13px; }
 .btn.btn--lg { font-size: 15px; padding: 13px 40px; letter-spacing: 6px; border-radius: var(--radius); }
-.btn.btn--gold { background: rgba(232,200,122,.08); color: #e8c87a; border-color: rgba(232,200,122,.35); }
-.btn.btn--gold:hover { background: rgba(232,200,122,.16); box-shadow: 0 0 24px rgba(232,200,122,.28); }
+.btn.btn--gold { background: transparent; color: #e8c87a; border-color: rgba(232,200,122,.35); }
+.btn.btn--gold:hover { background: transparent; box-shadow: 0 0 24px rgba(232,200,122,.28); }
 
 /* ---- 卡片：统一表面 + 悬停纵深 ---- */
 .card {
@@ -1451,9 +1463,11 @@ button { -webkit-tap-highlight-color: transparent; }
   <div class="fullscreen-viewport" id="scrollViewport">
     <div class="scroll-waves" aria-hidden="true"><canvas id="koiCanvas" class="koi-canvas"></canvas></div>
     <div class="scroll-track" id="scrollTrack">
-      <div class="painting-wrapper" id="painting">
-        <img src="assets/scroll.jpg" alt="合乐图（五代南唐·传周文矩）整卷" id="paintingImg">
-        <!-- 热点由 JS 注入 -->
+      <div class="scroll-track-inner" id="scrollTrackInner">
+        <div class="painting-wrapper" id="painting">
+          <img src="assets/scroll.jpg" alt="合乐图（五代南唐·传周文矩）整卷" id="paintingImg">
+          <!-- 热点由 JS 注入 -->
+        </div>
       </div>
     </div>
     <div class="shader" aria-hidden="true"></div>
@@ -1472,6 +1486,8 @@ button { -webkit-tap-highlight-color: transparent; }
   <div class="detail-wrap" id="detailWrap"></div>
 </section>
 
+<script src="assets/gsap.min.js"></script>
+<script src="assets/ScrollTrigger.min.js"></script>
 <script>
 /* ============ 开始界面：光影跟随 + 背景按场景配置 ============ */
 (function(){
@@ -2148,33 +2164,36 @@ function zoomable(stage, contentEl, contain, minScale) {
   };
 }
 
-/* ============ 全屏横向展卷（滚轮→横滚 / 拖拽 / lerp） ============ */
+/* ============ 全屏横向展卷（原生横向滚动 + GSAP ScrollTrigger scrub 视差） ============ */
 (function () {
   const viewport = document.getElementById('scrollViewport');
   const track = document.getElementById('scrollTrack');
+  const trackInner = document.getElementById('scrollTrackInner');
   const wrapper = document.getElementById('painting');
   const img = document.getElementById('paintingImg');
-  if (!viewport || !track || !wrapper) return;
+  const waves = viewport ? viewport.querySelector('.scroll-waves') : null;
+  if (!viewport || !track || !trackInner || !wrapper) return;
+
   let centerMode = false;
-  let targetX = 0, currentX = 0, maxScroll = 0;
+  function maxScroll() {
+    return Math.max(0, wrapper.offsetWidth - viewport.clientWidth);
+  }
   function updateBounds() {
-    maxScroll = Math.max(0, wrapper.offsetWidth - window.innerWidth);
+    const ms = maxScroll();
     if (centerMode) {
-      if (maxScroll <= 0) {
+      if (ms <= 0) {
         // 整幅不超宽：画卷水平居中显示（不滚动），彻底解决宫乐图贴左
-        track.style.justifyContent = 'center';
-        targetX = 0; currentX = 0;
+        trackInner.style.justifyContent = 'center';
+        track.scrollLeft = 0;
       } else {
         // 超宽：画卷横向居中（滚到正中），可再左右平移
-        track.style.justifyContent = 'flex-start';
-        targetX = maxScroll / 2;
-        currentX = targetX;
+        trackInner.style.justifyContent = 'flex-start';
+        track.scrollLeft = ms / 2;
       }
-      track.style.transform = 'translate3d(' + (-currentX).toFixed(2) + 'px,0,0)';
     } else {
-      track.style.justifyContent = 'flex-start';
-      targetX = Math.max(0, Math.min(targetX, maxScroll));
+      trackInner.style.justifyContent = 'flex-start';
     }
+    if (window.ScrollTrigger) ScrollTrigger.refresh();
   }
   if (img) img.addEventListener('load', updateBounds);
   updateBounds();
@@ -2199,8 +2218,7 @@ function zoomable(stage, contentEl, contain, minScale) {
   viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
     userActive();
-    targetX += e.deltaY * 1.2;
-    targetX = Math.max(0, Math.min(targetX, maxScroll));
+    track.scrollLeft += e.deltaY * 1.2;
   }, { passive: false });
 
   let isDown = false, startClientX = 0, startScrollX = 0;
@@ -2209,34 +2227,61 @@ function zoomable(stage, contentEl, contain, minScale) {
     userActive();
     isDown = true;
     startClientX = e.clientX;
-    startScrollX = targetX;
+    startScrollX = track.scrollLeft;
     viewport.style.cursor = 'grabbing';
   });
   window.addEventListener('pointermove', (e) => {
     if (!isDown) return;
     const dx = e.clientX - startClientX;
-    targetX = startScrollX - (dx * 1.5);
-    targetX = Math.max(0, Math.min(targetX, maxScroll));
+    track.scrollLeft = startScrollX - (dx * 1.5);
   });
   window.addEventListener('pointerup', () => { isDown = false; viewport.style.cursor = 'grab'; });
   window.addEventListener('pointercancel', () => { isDown = false; viewport.style.cursor = 'grab'; });
 
   (function animate(now) {
-    if (!centerMode && auto && maxScroll > 0) {
-      targetX += autoDir * AUTO_SPEED;
-      if (targetX >= maxScroll) { targetX = maxScroll; autoDir = -1; }
-      else if (targetX <= 0) { targetX = 0; autoDir = 1; }
-    } else if (!centerMode && !auto && (now - lastActive) > 3500 && maxScroll > 0) {
+    const ms = maxScroll();
+    if (!centerMode && auto && ms > 0) {
+      track.scrollLeft += autoDir * AUTO_SPEED;
+      if (track.scrollLeft >= ms) { track.scrollLeft = ms; autoDir = -1; }
+      else if (track.scrollLeft <= 0) { track.scrollLeft = 0; autoDir = 1; }
+    } else if (!centerMode && !auto && (now - lastActive) > 3500 && ms > 0) {
       auto = true;
     }
-    currentX += (targetX - currentX) * 0.08;
-    track.style.transform = 'translate3d(' + (-currentX).toFixed(2) + 'px,0,0)';
     requestAnimationFrame(animate);
   })(performance.now());
 
+  /* ---- GSAP ScrollTrigger scrub 视差：背景层 0.4x、前景层（画卷+热点）1.2x、滚动淡入 ---- */
+  let stReady = false;
+  function applyParallax() {
+    const ms = Math.max(1, maxScroll());
+    const p = Math.max(0, Math.min(1, track.scrollLeft / ms));
+    const fade = 0.5 + 0.5 * Math.min(1, p / 0.2); // 滚动前 20% 完成淡入
+    if (waves) gsap.set(waves, { x: -track.scrollLeft * 0.4, opacity: fade });
+    // trackInner 额外 -0.2x → 画卷/热点总位移 = 原生滚动 1.0x + 0.2x = 1.2x
+    gsap.set(trackInner, { x: -track.scrollLeft * 0.2, opacity: fade });
+  }
+  function initScrollTrigger() {
+    if (stReady) return;
+    stReady = true;
+    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+    gsap.registerPlugin(ScrollTrigger);
+    ScrollTrigger.create({
+      trigger: trackInner,
+      scroller: track,
+      horizontal: true,
+      start: 0,
+      end: () => Math.max(1, maxScroll()),
+      scrub: true,
+      onUpdate: applyParallax
+    });
+    applyParallax();
+  }
+  initScrollTrigger();
+  track.addEventListener('scroll', () => { if (window.ScrollTrigger) ScrollTrigger.update(); });
+
   window.__resetScroll = () => {
-    if (centerMode) { updateBounds(); targetX = Math.max(0, Math.min(maxScroll, maxScroll / 2)); currentX = targetX; track.style.transform = 'translate3d(' + (-currentX).toFixed(2) + 'px,0,0)'; }
-    else { targetX = 0; autoDir = 1; }
+    if (centerMode) { updateBounds(); track.scrollLeft = Math.max(0, Math.min(maxScroll(), maxScroll() / 2)); }
+    else { track.scrollLeft = 0; autoDir = 1; }
   };
   window.__recalcScroll = updateBounds;
 })();
