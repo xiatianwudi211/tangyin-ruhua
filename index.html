@@ -557,9 +557,9 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   max-width: 860px;
   margin: 0 auto;
   padding: 26px 20px 60px;
-  background: rgba(243,235,219,0.62);
-  backdrop-filter: blur(22px) saturate(1.18);
-  -webkit-backdrop-filter: blur(22px) saturate(1.18);
+  background: rgba(243,235,219,0.30);
+  backdrop-filter: blur(6px) saturate(1.1);
+  -webkit-backdrop-filter: blur(6px) saturate(1.1);
   border-left: 1px solid rgba(255,250,240,0.25);
   border-right: 1px solid rgba(255,250,240,0.25);
   box-shadow: 0 30px 90px rgba(8,6,4,0.5);
@@ -949,9 +949,6 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 .ac.in > * {
   opacity: 1;
   transform: none;
-  transition:
-    opacity 0.6s var(--ease-out),
-    transform 0.6s var(--ease-out);
 }
 .ac.in > *:nth-child(1) { transition-delay: 0.00s; }
 .ac.in > *:nth-child(2) { transition-delay: 0.07s; }
@@ -2336,15 +2333,8 @@ function renderDetail(id) {
   const closeBtn = document.getElementById("detailClose");
   if (closeBtn) closeBtn.addEventListener("click", () => { location.hash = "#/"; });
 
-  // 预加载相邻乐器图 + 当前图加载完成淡入（消除切换时背景空白）
+  // 预加载相邻乐器图（切换即显，不出现加载空白）
   [prev, next].forEach(x => { const im = new Image(); im.src = 'assets/' + x.id + '.png'; });
-  const dImg = wrap.querySelector('.detail-content img, .detail-content .attached-card img');
-  if (dImg) {
-    dImg.style.opacity = '0';
-    dImg.style.transition = 'opacity .45s ease';
-    const show = () => { dImg.style.opacity = '1'; };
-    if (dImg.complete) show(); else dImg.addEventListener('load', show, { once: true });
-  }
 
   // scroll reveal：详情内容滚动显现（进入视口 → +.in），仅一次
   if (!window.__revealObs) {
@@ -2706,9 +2696,16 @@ route();
         welcome.classList.add('hide');
         setTimeout(function () {
           if (welcome.parentNode) welcome.parentNode.removeChild(welcome);
-          // 放大收尾与开始界面淡入重叠衔接：内容淡入上移 24px，只一次
+          // 放大收尾与开始界面淡入重叠衔接：FadeContent mist 雾中浮现（blur 消散 + 上移 + stagger）
           const ic = document.getElementById('intro-content');
-          if (ic) ic.classList.add('in');
+          if (ic) {
+            ic.classList.add('in');
+            if (typeof gsap !== 'undefined') {
+              gsap.fromTo(ic.children,
+                { autoAlpha: 0, y: 26, filter: 'blur(10px)' },
+                { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.8, ease: 'power2.out', stagger: 0.1, delay: 0.05, clearProps: 'filter,transform', overwrite: true });
+            }
+          }
         }, 1000);
       }
     }
