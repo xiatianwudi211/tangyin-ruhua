@@ -765,26 +765,30 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 }
 .back-link:hover { color: var(--ink); border-bottom-color: rgba(185,140,62,.55); }
 .back-link svg { width: 14px; height: 14px; }
-/* 悬浮退出按键（乐器介绍弹出后右上角） */
-.detail-close {
-  position: fixed; top: 22px; right: 26px;
-  z-index: 60;
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 9px 16px;
-  border: 1px solid rgba(232,200,122,.35);
+/* 退出按键：位于缩放键旁的右上角 */
+.detail-tools .detail-close {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 13px;
+  border: 1px solid rgba(232,200,122,.45);
   border-radius: 999px;
   background: transparent;
-  color: #e8c87a;
-  font-size: 13px; letter-spacing: 3px;
+  color: #b98c3e;
+  font-family: var(--font-serif);
+  font-size: 12px; letter-spacing: 2px;
   cursor: pointer;
   transition: all .25s var(--ease-out);
 }
-.detail-close svg { width: 15px; height: 15px; }
-.detail-close:hover {
+.detail-tools .detail-close svg { width: 14px; height: 14px; }
+.detail-tools .detail-close:hover {
   color: #e8c87a;
-  border-color: rgba(232,200,122,.9);
-  box-shadow: 0 8px 26px rgba(0,0,0,.35);
-  transform: translateY(-1px);
+  border-color: rgba(232,200,122,.95);
+  background: rgba(232,200,122,.12);
+  box-shadow: 0 6px 18px rgba(120,85,30,.25);
 }
 
 .instrument-card {
@@ -795,6 +799,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 }
 /* 详情图缩放舞台 */
 .detail-tools {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1091,19 +1096,26 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 .detail-nav a {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  gap: 7px;
+  font-size: 14px;
   letter-spacing: 2px;
-  color: var(--ink-soft);
-  padding: 6px 12px 6px 0;
-  border: 0;
-  border-radius: 0;
-  border-bottom: 1px solid transparent;
-  background: transparent;
-  transition: color 0.2s, border-color 0.2s;
+  color: #4a351c;
+  padding: 9px 20px;
+  border: 1px solid #b98c3e;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e3c07c, #c9a050);
+  box-shadow: 0 5px 16px rgba(150,105,40,.35);
+  transition: all 0.25s var(--ease-out);
 }
-.detail-nav a:hover { color: var(--ink); border-bottom-color: rgba(185,140,62,.55); }
-.detail-nav a:hover { color: var(--qing-deep); border-color: var(--qing); }
+.detail-nav a svg { width: 16px; height: 16px; }
+.detail-nav a:hover {
+  color: #3a2a14;
+  background: linear-gradient(180deg, #eecd8a, #d4ab58);
+  border-color: #a97f2e;
+  box-shadow: 0 9px 24px rgba(150,105,40,.5);
+  transform: translateY(-1px);
+}
+.detail-nav a:active { transform: translateY(0) scale(.98); }
 .detail-nav .next { margin-left: auto; }
 
 /* ===== 页脚 ===== */
@@ -2520,6 +2532,8 @@ function buildCardHTML(it) {
     + '<button type="button" class="btn btn--sm btn--outline dz-out" aria-label="' + t.zoomOut + '">' + t.zoomOut + '</button>'
     + '<button type="button" class="btn btn--sm btn--primary dz-fit">' + t.zoomFit + '</button>'
     + '<button type="button" class="btn btn--sm btn--outline dz-in" aria-label="' + t.zoomIn + '">' + t.zoomIn + '</button>'
+    + '<button type="button" class="detail-close" id="detailClose" aria-label="' + t.exit + '" title="' + t.exit + '">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' + t.exit + '</button>'
     + '</div>'
     + '<div class="detail-zoom"><div class="detail-canvas">'
     + '<div class="detail-content">' + (isGongle
@@ -2545,8 +2559,6 @@ function renderDetail(id) {
     '<div class="detail-topbar">'
     + '<a class="back-link specular" href="#/" aria-label="' + t.back + '">'
     + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg>' + t.back + '</a>'
-    + '<button type="button" class="detail-close specular" id="detailClose" aria-label="' + t.exit + '">'
-    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' + t.exit + '</button>'
     + '</div>';
   const nav =
     '<nav class="detail-nav">'
