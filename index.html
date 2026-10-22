@@ -2580,6 +2580,9 @@ function route() {
     renderDetail(m[1]);
     showDetail.classList.add("active");
     showScroll.classList.remove("active");
+    // 直接进入乐器详情时，开场入场界面（文件夹/票根）不应再遮挡，移除
+    const welcomeEl = document.getElementById('welcome');
+    if (welcomeEl) welcomeEl.remove();
     document.body.classList.remove("page-leaving");
     // 详情视图：恢复原生滚动以阅读正文
     document.documentElement.style.overflow = 'auto';
