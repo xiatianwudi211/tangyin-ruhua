@@ -833,9 +833,9 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   margin: 0 auto;
 }
 /* 宫乐图乐器介绍背景 = 宫乐图本幅（合乐图等其余保持原样） */
-/* body 级常驻背景层：fixed 固定全屏，详情页专属，任何跳转/切换/内容重建都不影响它 */
+/* body 级常驻背景层：fixed 固定全屏、恒定显示，不随任何界面转换出现/隐藏 */
 #stable-bg {
-  display: none;
+  display: block;
   position: fixed;
   top: 0;
   left: 0;
@@ -853,11 +853,63 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   transform: translateZ(0);
   backface-visibility: hidden;
 }
-#stable-bg.stable-bg--active { display: block; }
 #stable-bg.stable-bg--gongle {
   background-image:
     linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
     url('assets/gongle.jpg');
+}
+
+/* ===== 加载界面：等网页全部资源加载完整后淡出 ===== */
+#loader {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(232,200,122,0.08) 0%, transparent 45%),
+    linear-gradient(160deg, #14100b 0%, #241c12 55%, #17110b 100%);
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+#loader.loader--done { opacity: 0; visibility: hidden; pointer-events: none; }
+.loader-seal {
+  width: 74px;
+  height: 74px;
+  border: 2px solid rgba(232,200,122,0.6);
+  color: #e8c87a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-family: 'Aoyagi Reisho', var(--font-serif);
+  animation: sealPulse 1.2s ease-in-out infinite;
+  position: relative;
+}
+.loader-seal::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border: 1px dashed rgba(232,200,122,0.35);
+  animation: sealSpin 8s linear infinite;
+}
+@keyframes sealPulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.94); }
+  50% { opacity: 1; transform: scale(1); }
+}
+@keyframes sealSpin { to { transform: rotate(360deg); } }
+.loader-text {
+  font-family: 'Aoyagi Reisho', var(--font-serif);
+  font-size: 22px;
+  letter-spacing: 8px;
+  color: rgba(232,200,122,0.9);
+}
+.loader-sub {
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: rgba(232,200,122,0.5);
 }
 
 .card-head {
@@ -1411,8 +1463,15 @@ button { -webkit-tap-highlight-color: transparent; }
 </head>
 <body>
 
-<!-- body 级常驻古画背景层：详情页 fixed 固定全屏，任何跳转/切换都不消失 -->
+<!-- body 级常驻古画背景层：fixed 固定全屏、恒定显示，任何跳转/切换都不消失 -->
 <div id="stable-bg" aria-hidden="true"></div>
+
+<!-- ===== 加载界面：网页全部资源加载完前显示 ===== -->
+<div id="loader" aria-hidden="true">
+  <div class="loader-seal">樂</div>
+  <div class="loader-text">唐音入画</div>
+  <div class="loader-sub">展卷 · Loading</div>
+</div>
 
 <div id="shader" aria-hidden="true"></div>
 
@@ -2401,9 +2460,6 @@ function route() {
     renderDetail(m[1]);
     showDetail.classList.add("active");
     showScroll.classList.remove("active");
-    // 详情视图激活 body 级常驻背景层（不随内容重建消失）
-    const sb = document.getElementById('stable-bg');
-    if (sb) sb.classList.add('stable-bg--active');
     document.body.classList.remove("page-leaving");
     // 详情视图：恢复原生滚动以阅读正文
     document.documentElement.style.overflow = 'auto';
@@ -2424,9 +2480,6 @@ function route() {
   } else {
     showScroll.classList.add("active");
     showDetail.classList.remove("active");
-    // 画卷视图隐藏 body 级背景层（画卷自带背景覆盖）
-    const sb = document.getElementById('stable-bg');
-    if (sb) sb.classList.remove('stable-bg--active');
     document.body.classList.remove("page-leaving");
     // 画卷视图：锁定原生滚动，保持全屏横向展卷
     document.documentElement.style.overflow = 'hidden';
@@ -2763,6 +2816,24 @@ route();
 
 // 初始化默认场景（合乐图）：重渲热点/索引并配置开始界面背景
 activateScene(sceneKey);
+
+/* ===== 加载界面：等网页全部资源 + 字体加载完整后淡出 ===== */
+(function () {
+  const finish = () => {
+    const l = document.getElementById('loader');
+    if (!l || l.classList.contains('loader--done')) return;
+    l.classList.add('loader--done');
+    setTimeout(() => { const el = document.getElementById('loader'); if (el) el.remove(); }, 700);
+  };
+  if (document.readyState === 'complete') {
+    Promise.all([document.fonts.ready]).then(() => setTimeout(finish, 250));
+  } else {
+    window.addEventListener('load', () => {
+      Promise.all([document.fonts.ready]).then(() => setTimeout(finish, 250));
+    });
+  }
+  setTimeout(finish, 14000); // 兜底：极端情况下最多展示 14s
+})();
 </script>
 <script src="assets/line-waves.js"></script>
 <script src="assets/koi-school.js"></script>
