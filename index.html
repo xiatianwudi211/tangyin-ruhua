@@ -541,12 +541,20 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   position: relative;
   min-height: 100vh;
   background-color: #17110b;
+}
+/* 独立背景层：不随内容重建、不受动画合成影响，稳定存在 */
+#view-detail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   background-image:
     linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
     url('assets/ticket-art.jpg');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+  pointer-events: none;
 }
 .detail-wrap {
   position: relative;
@@ -844,14 +852,10 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   margin: 0 auto;
 }
 /* 宫乐图乐器介绍背景 = 宫乐图本幅（合乐图等其余保持原样） */
-#view-detail.view-detail--gongle {
-  background-color: #17110b;
+#view-detail.view-detail--gongle::before {
   background-image:
     linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
     url('assets/gongle.jpg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
 }
 
 .card-head {
@@ -949,6 +953,9 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 .ac.in > * {
   opacity: 1;
   transform: none;
+  transition:
+    opacity 0.6s var(--ease-out),
+    transform 0.6s var(--ease-out);
 }
 .ac.in > *:nth-child(1) { transition-delay: 0.00s; }
 .ac.in > *:nth-child(2) { transition-delay: 0.07s; }
@@ -1990,6 +1997,12 @@ function switchSceneWithRoll(targetKey) {
       if (window.__recalcScroll) window.__recalcScroll();
       painting.classList.remove('is-rolling');
       updateSwitchUI();
+      // FadeContent mist 雾中浮现：新画卷自模糊/上移淡入，与卷轴展开重叠衔接
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(painting,
+          { autoAlpha: 0, filter: 'blur(10px)', y: 14 },
+          { autoAlpha: 1, filter: 'blur(0px)', y: 0, duration: 1.6, ease: 'power2.out', delay: 0.05, clearProps: 'filter,transform', overwrite: true });
+      }
       setTimeout(() => { isSwitching = false; }, 80);
     };
     if (pimg && !pimg.complete) pimg.addEventListener('load', done, { once: true });
@@ -2696,16 +2709,9 @@ route();
         welcome.classList.add('hide');
         setTimeout(function () {
           if (welcome.parentNode) welcome.parentNode.removeChild(welcome);
-          // 放大收尾与开始界面淡入重叠衔接：FadeContent mist 雾中浮现（blur 消散 + 上移 + stagger）
+          // 放大收尾与开始界面淡入重叠衔接：内容淡入上移 24px，只一次
           const ic = document.getElementById('intro-content');
-          if (ic) {
-            ic.classList.add('in');
-            if (typeof gsap !== 'undefined') {
-              gsap.fromTo(ic.children,
-                { autoAlpha: 0, y: 26, filter: 'blur(10px)' },
-                { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.8, ease: 'power2.out', stagger: 0.1, delay: 0.05, clearProps: 'filter,transform', overwrite: true });
-            }
-          }
+          if (ic) ic.classList.add('in');
         }, 1000);
       }
     }
