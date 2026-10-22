@@ -543,18 +543,134 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   /* 已按用户要求去掉背景与波线：暖白纯色底，干净 */
   background: #fbf9f4;
 }
-.detail-wrap {
+/* 详情页 = DepthCarousel 纵深轮播容器 */
+#detailWrap {
   position: relative;
-  z-index: 1;
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 78px 14px 64px;
 }
-/* 内容容器：已按用户要求去掉卡片底色/边框/阴影，文字直接落在暖白背景上 */
-.detail-wrap {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 26px 20px 60px;
+/* 顶部常驻工具条：返回画卷 / 退出 */
+.detail-topbar {
+  position: absolute;
+  top: 16px;
+  left: 18px;
+  z-index: 3200;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.detail-topbar .back-link,
+.detail-topbar .detail-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--ink-faint);
   background: transparent;
   border: 0;
-  box-shadow: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color .2s ease, background .2s ease;
+}
+.detail-topbar .back-link:hover,
+.detail-topbar .detail-close:hover { color: var(--ink); background: rgba(232,200,122,.14); }
+.detail-topbar .back-link svg,
+.detail-topbar .detail-close svg { width: 16px; height: 16px; }
+
+/* ---- DepthCarousel 纵深轮播（国风绢本配色） ---- */
+.dc-stage {
+  position: relative;
+  width: 100%;
+  min-height: min(82vh, 960px);
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  outline: none;
+}
+.dc-stage:active { cursor: grabbing; }
+.dc-stage:focus-visible { outline: 2px solid rgba(185,140,62,.5); outline-offset: 4px; border-radius: 12px; }
+.dc-stage-inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.dc-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  width: min(92vw, 860px);
+  will-change: transform, opacity, filter;
+  transform: translate(-50%, -50%);
+}
+.dc-card .instrument-card { border-radius: 20px; }
+.dc-tint {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  background: rgba(10,8,6,0.6);
+  border-radius: 20px;
+}
+.dc-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3100;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(185,140,62,.45);
+  border-radius: 999px;
+  background: rgba(244,238,224,.72);
+  backdrop-filter: blur(6px);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease, transform .2s ease;
+}
+.dc-arrow:hover { background: rgba(232,200,122,.28); border-color: rgba(185,140,62,.8); }
+.dc-arrow:active { transform: translateY(-50%) scale(.94); }
+.dc-arrow--prev { left: 8px; }
+.dc-arrow--next { right: 8px; }
+.dc-dots {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3100;
+  display: flex;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(244,238,224,.7);
+  backdrop-filter: blur(6px);
+}
+.dc-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(122,106,82,.4);
+  cursor: pointer;
+  transition: width .25s ease, background .25s ease;
+}
+.dc-dot.is-active { width: 22px; background: var(--cinnabar, #a83a2e); }
+@media (prefers-reduced-motion: reduce) {
+  .dc-card { will-change: auto; }
+  .dc-arrow, .dc-dot { transition: none; }
 }
 /* 全局描金波线由 body 级 #bg-waves 恒定提供（见 #bg-waves 规则） */
 /* 锦鲤群背景层：展卷界面画卷之上、展厅射灯之下，低透明 */
@@ -2005,7 +2121,11 @@ function applyLanguage() {
   updateStatic();
   activateScene(sceneKey);
   const m = location.hash.match(/^#\/instrument\/(\w+)/);
-  if (m && byId[m[1]]) renderDetail(m[1]);
+  if (m && byId[m[1]]) {
+    // 语言切换：强制重建轮播（新文案），保持当前乐器聚焦
+    DC.count = 0;
+    renderDetail(m[1]);
+  }
   updateSwitchUI();
 }
 
@@ -2331,76 +2451,211 @@ function zoomable(stage, contentEl, contain, minScale) {
   window.__recalcScroll = updateBounds;
 })();
 
-/* ============ 详情渲染 ============ */
-function renderDetail(id) {
-  const it = byId[id];
-  const wrap = document.getElementById("detailWrap");
-  if (!it) { window.location.hash = "#/"; return; }
+/* ============ 详情渲染：DepthCarousel 纵深轮播 ============ */
+/* 单张乐器卡 HTML（不含返回/退出，放轮播外层） */
+function buildCardHTML(it) {
   const isGongle = sceneKey === 'gongle';
-  const prev = instruments[(it.index - 1 + instruments.length) % instruments.length];
-  const next = instruments[(it.index + 1) % instruments.length];
-  let rowsHtml = it.rows.map((r, i) =>
-    '<div class="info-row reveal" style="transition-delay:' + (0.30 + i * 0.06) + 's"><span class="label">' + r[0] + '</span><span class="value">' + r[1] + '</span></div>'
-  ).join("");
   const t = I18N[lang];
-  wrap.innerHTML =
-    '<div class="detail-top reveal" style="transition-delay:.05s">'
-    + '<a class="back-link" href="#/" aria-label="' + t.back + '">'
-    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg>' + t.back + '</a>'
+  const rowsHtml = it.rows.map((r, i) =>
+    '<div class="info-row" style="transition-delay:' + (0.30 + i * 0.06) + 's"><span class="label">' + r[0] + '</span><span class="value">' + r[1] + '</span></div>'
+  ).join("");
+  return '<article class="instrument-card">'
+    + '<div class="detail-tools">'
+    + '<button type="button" class="btn btn--sm btn--outline dz-out" aria-label="' + t.zoomOut + '">' + t.zoomOut + '</button>'
+    + '<button type="button" class="btn btn--sm btn--primary dz-fit">' + t.zoomFit + '</button>'
+    + '<button type="button" class="btn btn--sm btn--outline dz-in" aria-label="' + t.zoomIn + '">' + t.zoomIn + '</button>'
     + '</div>'
-    + '<button type="button" class="detail-close" id="detailClose" aria-label="' + t.exit + '">'
-    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' + t.exit + '</button>'
-    + '<article class="instrument-card">'
-    + '<div class="detail-tools reveal" style="transition-delay:.12s">'
-    + '<button type="button" id="dzOut" class="btn btn--sm btn--outline" aria-label="' + t.zoomOut + '">' + t.zoomOut + '</button>'
-    + '<button type="button" id="dzFit" class="btn btn--sm btn--primary">' + t.zoomFit + '</button>'
-    + '<button type="button" id="dzIn" class="btn btn--sm btn--outline" aria-label="' + t.zoomIn + '">' + t.zoomIn + '</button>'
-    + '</div>'
-    + '<div class="detail-zoom reveal" style="transition-delay:.18s" id="detailZoom"><div class="detail-canvas" id="detailCanvas">'
-    + '<div class="detail-content" id="detailContent">' + (isGongle
+    + '<div class="detail-zoom"><div class="detail-canvas">'
+    + '<div class="detail-content">' + (isGongle
         ? '<div class="attached-card"><img src="assets/' + it.id + '.png" alt="' + it.full + '" draggable="false"></div>'
         : '<img src="assets/' + it.id + '.png" alt="' + it.full + '">') + '</div>'
     + '</div><span class="detail-zoom-hint">' + t.zoomHint + '</span></div>'
-    + '<div class="card-head reveal" style="transition-delay:.24s"><h2>' + it.full + '</h2><span class="instrument-tag">' + it.tag + '</span></div>'
-    + '<p class="instrument-desc reveal" style="transition-delay:.30s">' + it.desc + '</p>'
+    + '<div class="card-head"><h2>' + it.full + '</h2><span class="instrument-tag">' + it.tag + '</span></div>'
+    + '<p class="instrument-desc">' + it.desc + '</p>'
     + rowsHtml
-    + '</article>'
-    + '<div class="detail-nav reveal" style="transition-delay:' + (0.32 + it.rows.length * 0.06) + 's">'
-    + '<a href="#/instrument/' + prev.id + '" class="prev">← ' + prev.name + '</a>'
-    + '<a href="#/instrument/' + next.id + '" class="next">' + next.name + ' →</a>'
-    + '</div>';
+    + '</article>';
+}
 
-  // 悬浮退出按键 → 返回画卷
-  const closeBtn = document.getElementById("detailClose");
-  if (closeBtn) closeBtn.addEventListener("click", () => { location.hash = "#/"; });
-
-  // 预加载相邻乐器图（切换即显，不出现加载空白）
-  [prev, next].forEach(x => { const im = new Image(); im.src = 'assets/' + x.id + '.png'; });
-
-  // scroll reveal：详情内容滚动显现（进入视口 → +.in），仅一次
-  if (!window.__revealObs) {
-    window.__revealObs = new IntersectionObserver((es) => {
-      es.forEach(en => {
-        if (en.isIntersecting) { en.target.classList.add('in'); window.__revealObs.unobserve(en.target); }
-      });
-    }, { threshold: 0.12 });
+/* DepthCarousel 轮播状态 */
+const DC = {
+  stage: null, cards: [], dots: [], pos: 0, focus: 0,
+  tween: null, scale: 1, count: 0, cfg: null, drag: null, wheelTimer: null, ro: null
+};
+function dcLayout() {
+  const cfg = DC.cfg, n = DC.count; if (!n || !DC.stage) return;
+  const dir = cfg.tiltDirection === 'left' ? -1 : 1;
+  for (let i = 0; i < n; i++) {
+    const el = DC.cards[i]; if (!el) continue;
+    let d = i - DC.pos;
+    if (cfg.loop && n > 1) { d = ((d % n) + n) % n; if (d > n / 2) d -= n; }
+    const back = Math.max(0, d), az = Math.abs(d);
+    const shown = az <= cfg.visibleCards + 0.5;
+    const tz = -cfg.depth * d, tx = dir * cfg.spread * d;
+    const ry = dir * cfg.tilt * Math.min(Math.max(d, 0), 1);
+    let opacity = d < 0 ? Math.max(0, 1 + d) : 1;
+    if (!shown) opacity = 0;
+    const brightness = Math.max(0.15, 1 - back * cfg.falloff);
+    const blurPx = cfg.blur > 0 ? Math.min(cfg.blur, (back / Math.max(1, cfg.visibleCards)) * cfg.blur) : 0;
+    const zi = Math.round(2000 - d * 20);
+    el.style.transform = 'translate(-50%, -50%) scale(' + DC.scale + ') translateX(' + tx.toFixed(2) + 'px) translateZ(' + tz.toFixed(2) + 'px) rotateY(' + ry.toFixed(3) + 'deg)';
+    el.style.opacity = opacity.toFixed(3);
+    el.style.filter = 'brightness(' + brightness.toFixed(3) + ') blur(' + blurPx.toFixed(2) + 'px)';
+    el.style.zIndex = String(zi);
+    el.style.pointerEvents = (shown && opacity > 0.05) ? 'auto' : 'none';
+    const ov = el.querySelector('.dc-tint');
+    if (ov) ov.style.opacity = Math.min(0.86, back * cfg.falloff * 1.25).toFixed(3);
   }
-  const rv = window.__revealObs;
-  rv.disconnect();
-  wrap.querySelectorAll('.reveal').forEach(el => rv.observe(el));
-
-  // 详情图可缩放平移（contain：整件放入舞台），并绑定缩放按钮
-  // 必须等详情视图 display 变为可见后再初始化，否则 clientWidth/Height 为 0
-  const dz = document.getElementById("detailZoom");
-  const content = document.getElementById("detailContent");
-  const boot = () => {
+}
+function dcTween(target) {
+  if (DC.tween) DC.tween.kill();
+  const cfg = DC.cfg; const proxy = { p: DC.pos };
+  DC.tween = gsap.to(proxy, {
+    p: target, duration: cfg.duration / 1000, ease: cfg.ease,
+    onUpdate: () => { DC.pos = proxy.p; dcLayout(); },
+    onComplete: () => { if (DC.count > 0) DC.pos = ((DC.pos % DC.count) + DC.count) % DC.count; dcLayout(); }
+  });
+}
+function dcActivate(idx) {
+  DC.dots.forEach((d, i) => d.classList.toggle('is-active', i === idx));
+  const it = instruments[idx];
+  if (it && location.hash !== '#/instrument/' + it.id) {
+    try { history.replaceState(null, '', '#/instrument/' + it.id); } catch (e) {}
+  }
+  const scN = cur();
+  document.title = it ? (it.full + ' · ' + ((lang === 'en' && scN.en) ? scN.en.ticketName : scN.ticketName)) : document.title;
+  // 预加载相邻乐器图
+  const L = instruments.length;
+  [instruments[(idx - 1 + L) % L], instruments[(idx + 1) % L]].forEach(x => { const im = new Image(); im.src = 'assets/' + x.id + '.png'; });
+  // 活动卡绑定缩放
+  bindZoom(idx);
+}
+function dcFocus(raw, animate) {
+  const cfg = DC.cfg, n = DC.count; if (!n) return;
+  const idx = cfg.loop ? ((raw % n) + n) % n : Math.min(Math.max(raw, 0), n - 1);
+  let delta = idx - DC.pos;
+  if (cfg.loop && n > 1) { delta = ((delta % n) + n) % n; if (delta > n / 2) delta -= n; }
+  dcTween(DC.pos + delta);
+  if (idx !== DC.focus) { DC.focus = idx; dcActivate(idx); }
+}
+function bindZoom(idx) {
+  const card = DC.cards[idx]; if (!card) return;
+  const dz = card.querySelector('.detail-zoom');
+  const content = card.querySelector('.detail-content');
+  if (!dz || !content) return;
+  // 只绑定当前活动卡；旧卡非活动、pointer-events:none，不再接收交互
+  try {
     const ctrl = zoomable(dz, content, true, 0.5);
-    document.getElementById("dzIn").addEventListener("click", ctrl.zoomIn);
-    document.getElementById("dzOut").addEventListener("click", ctrl.zoomOut);
-    document.getElementById("dzFit").addEventListener("click", ctrl.fit);
+    const zin = card.querySelector('.dz-in'), zout = card.querySelector('.dz-out'), zfit = card.querySelector('.dz-fit');
+    if (zin) zin.addEventListener('click', ctrl.zoomIn);
+    if (zout) zout.addEventListener('click', ctrl.zoomOut);
+    if (zfit) zfit.addEventListener('click', ctrl.fit);
+  } catch (e) {}
+}
+function initDetailCarousel(startIndex) {
+  if (DC.tween) DC.tween.kill();
+  if (DC.ro) DC.ro.disconnect();
+  const wrap = document.getElementById('detailWrap');
+  const t = I18N[lang];
+  const cardsHtml = instruments.map((it) => '<div class="dc-card">' + buildCardHTML(it) + '<div class="dc-tint"></div></div>').join('');
+  const topbar =
+    '<div class="detail-topbar">'
+    + '<a class="back-link" href="#/" aria-label="' + t.back + '">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg>' + t.back + '</a>'
+    + '<button type="button" class="detail-close" id="detailClose" aria-label="' + t.exit + '">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' + t.exit + '</button>'
+    + '</div>';
+  const arrows =
+    '<button type="button" class="dc-arrow dc-arrow--prev" aria-label="' + t.back + '"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg></button>'
+    + '<button type="button" class="dc-arrow dc-arrow--next" aria-label="' + t.back + '"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></button>';
+  const dots = '<div class="dc-dots">' + instruments.map((_, i) => '<button type="button" class="dc-dot' + (i === startIndex ? ' is-active' : '') + '" data-i="' + i + '" role="tab" aria-label="' + (i + 1) + '"></button>').join('') + '</div>';
+  wrap.innerHTML = topbar + '<div class="dc-stage"><div class="dc-stage-inner">' + cardsHtml + '</div>' + arrows + dots + '</div>';
+  const stage = wrap.querySelector('.dc-stage');
+  DC.stage = stage;
+  DC.cards = [].slice.call(stage.querySelectorAll('.dc-card'));
+  DC.dots = [].slice.call(stage.querySelectorAll('.dc-dot'));
+  const prev = stage.querySelector('.dc-arrow--prev'), next = stage.querySelector('.dc-arrow--next');
+  DC.count = instruments.length;
+  DC.cfg = { depth: 280, spread: 78, tilt: 16, tiltDirection: 'right', visibleCards: 2, falloff: 0.16, blur: 4, duration: 720, ease: 'power3.out', loop: true };
+  DC.pos = startIndex; DC.focus = startIndex; DC.scale = 1;
+
+  // 响应式缩放
+  DC.ro = new ResizeObserver(() => {
+    const w = stage.clientWidth || 1;
+    const needed = (Math.min(Math.max(w, 0.01), 860) || 860) + Math.abs(DC.cfg.spread) * 2 + 140;
+    DC.scale = Math.min(Math.max(w / needed, 0.4), 1);
+    dcLayout();
+  });
+  DC.ro.observe(stage);
+
+  // 事件：箭头 / dots / 滚轮 / 拖拽 / 键盘
+  prev.addEventListener('click', () => dcFocus(DC.focus - 1, true));
+  next.addEventListener('click', () => dcFocus(DC.focus + 1, true));
+  DC.dots.forEach(d => d.addEventListener('click', () => dcFocus(+d.getAttribute('data-i'), true)));
+  const onWheel = (e) => {
+    const cfg = DC.cfg; if (cfg.count < 2) return;
+    e.preventDefault();
+    if (DC.tween) DC.tween.kill();
+    const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    const delta = e.deltaMode === 1 ? raw * 24 : raw;
+    const step = Math.min(Math.max(delta / 640, -0.6), 0.6);
+    DC.pos += step; dcLayout();
+    if (DC.wheelTimer) clearTimeout(DC.wheelTimer);
+    DC.wheelTimer = setTimeout(() => dcFocus(Math.round(DC.pos), true), 130);
   };
-  // 延迟到视图可见、且图片尺寸就绪后再启动，保证整件放入并可自由缩放
-  setTimeout(boot, 0);
+  const stepPx = () => Math.max(460 * DC.scale, 60);
+  const onPD = (e) => {
+    const cfg = DC.cfg; if (cfg.count < 2) return;
+    if (DC.tween) DC.tween.kill();
+    DC.drag = { x: e.clientX, startPos: DC.pos, lastX: e.clientX, lastT: performance.now(), v: 0, moved: false, id: e.pointerId };
+  };
+  const onPM = (e) => {
+    const drag = DC.drag; if (!drag) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) > 4) { drag.moved = true; try { stage.setPointerCapture(drag.id); } catch (err) {} }
+    if (!drag.moved) return;
+    const now = performance.now();
+    const dt = Math.max(now - drag.lastT, 1);
+    drag.v = (e.clientX - drag.lastX) / dt;
+    drag.lastX = e.clientX; drag.lastT = now;
+    DC.pos = drag.startPos - dx / stepPx();
+    dcLayout();
+  };
+  const onPE = () => {
+    const drag = DC.drag; if (!drag) return; DC.drag = null;
+    if (!drag.moved) return;
+    const projected = DC.pos - (drag.v * 180) / stepPx();
+    dcFocus(Math.round(projected), true);
+  };
+  const onKD = (e) => {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); dcFocus(DC.focus - 1, true); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); dcFocus(DC.focus + 1, true); }
+  };
+  stage.addEventListener('wheel', onWheel, { passive: false });
+  stage.addEventListener('pointerdown', onPD);
+  stage.addEventListener('pointermove', onPM);
+  stage.addEventListener('pointerup', onPE);
+  stage.addEventListener('pointercancel', onPE);
+  stage.addEventListener('keydown', onKD);
+  stage.tabIndex = 0;
+
+  const closeBtn = wrap.querySelector('#detailClose');
+  if (closeBtn) closeBtn.addEventListener('click', () => { location.hash = '#/'; });
+
+  dcLayout();
+  dcActivate(startIndex);
+  // 延迟到视图可见、图片就绪后绑定缩放（clientWidth/Height 此时才有效）
+  setTimeout(() => bindZoom(startIndex), 0);
+}
+function renderDetail(id) {
+  const it = byId[id];
+  if (!it) { window.location.hash = "#/"; return; }
+  // 若轮播已就绪且仍是同一批乐器 → 直接纵深聚焦；否则重建
+  if (DC.count === instruments.length && DC.cards.length === instruments.length) {
+    if (DC.focus !== it.index) dcFocus(it.index, true);
+    else { bindZoom(it.index); dcActivate(it.index); }
+  } else {
+    initDetailCarousel(it.index);
+  }
 }
 
 /* ============ 路由 ============ */
@@ -2418,18 +2673,7 @@ function route() {
     document.documentElement.style.overflow = 'auto';
     document.body.style.overflow = 'auto';
     window.scrollTo(0, 0);
-    // 乐器间切换去掉卡片翻卡转场：切换瞬间替换内容，背景/图片保持稳定
-    window.__carouselDir = 0;
-    const detailWrapEl = document.getElementById("detailWrap");
-    const cardEl = detailWrapEl.querySelector('.instrument-card');
-    if (cardEl) cardEl.classList.remove("carousel-out", "carousel-in", "to-next", "to-prev");
-    const firstEnter = window.__switchInstrument !== true;
-    window.__switchInstrument = false;
-    detailWrapEl.classList.remove(firstEnter ? "detail-enter" : "detail-switch");
-    void detailWrapEl.offsetWidth;
-    detailWrapEl.classList.add(firstEnter ? "detail-enter" : "detail-switch");
-    const scN = cur();
-    document.title = byId[m[1]] ? byId[m[1]].full + " · " + ((lang === 'en' && scN.en) ? scN.en.ticketName : scN.ticketName) : document.title;
+    // 乐器切换由 DepthCarousel 纵深轮播接管（无卡顿转场）
   } else {
     showScroll.classList.add("active");
     showDetail.classList.remove("active");
@@ -2444,17 +2688,6 @@ function route() {
   }
 }
 window.addEventListener("hashchange", route);
-
-/* 乐器详情 prev/next：直接切换，不做卡片翻卡转场（保持背景/图片稳定） */
-document.addEventListener("click", (e) => {
-  const a = e.target.closest("#view-detail a.prev, #view-detail a.next");
-  if (!a) return;
-  const href = a.getAttribute("href");
-  if (!href) return;
-  e.preventDefault();
-  window.__switchInstrument = true;
-  location.hash = href;
-});
 
 /* 热点点击：乐器跳详情；皇帝光标切换宫乐图提示卡 */
 document.addEventListener("click", (e) => {
