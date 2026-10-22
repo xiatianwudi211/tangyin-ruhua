@@ -540,24 +540,21 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 #view-detail {
   position: relative;
   min-height: 100vh;
-  /* 已移除独立古画背景层与描金波线动效；改用浅色绢本底，干净且提亮 */
-  background:
-    radial-gradient(circle at 50% 20%, rgba(255,252,243,0.85) 0%, transparent 60%),
-    linear-gradient(160deg, #f2ead9 0%, #e7dcc6 100%);
+  /* 已按用户要求去掉背景与波线：暖白纯色底，干净 */
+  background: #fbf9f4;
 }
 .detail-wrap {
   position: relative;
   z-index: 1;
 }
-/* 磨砂质感：半透明纸面 + 背景模糊，合乐图底纹透过 */
+/* 内容容器：已按用户要求去掉卡片底色/边框/阴影，文字直接落在暖白背景上 */
 .detail-wrap {
   max-width: 860px;
   margin: 0 auto;
   padding: 26px 20px 60px;
-  background: rgba(243,235,219,0.30);
-  border-left: 1px solid rgba(255,250,240,0.25);
-  border-right: 1px solid rgba(255,250,240,0.25);
-  box-shadow: 0 30px 90px rgba(8,6,4,0.5);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 /* 全局描金波线由 body 级 #bg-waves 恒定提供（见 #bg-waves 规则） */
 /* 锦鲤群背景层：展卷界面画卷之上、展厅射灯之下，低透明 */
@@ -2791,7 +2788,6 @@ activateScene(sceneKey);
   setTimeout(finish, 14000); // 兜底：极端情况下最多展示 14s
 })();
 </script>
-<script src="assets/line-waves.js"></script>
 <script src="assets/koi-school.js"></script>
 <script src="assets/holo-card.js"></script>
 <script src="assets/buttons.js"></script>
