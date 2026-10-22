@@ -540,27 +540,6 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 #view-detail {
   position: relative;
   min-height: 100vh;
-  background-color: #17110b;
-}
-/* 独立背景层：fixed 固定全屏，任何跳转/切换/滚动都不影响背景视觉 */
-#view-detail::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  background-image:
-    linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
-    url('assets/ticket-art.jpg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  pointer-events: none;
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 .detail-wrap {
   position: relative;
@@ -854,7 +833,28 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   margin: 0 auto;
 }
 /* 宫乐图乐器介绍背景 = 宫乐图本幅（合乐图等其余保持原样） */
-#view-detail.view-detail--gongle::before {
+/* body 级常驻背景层：fixed 固定全屏，详情页专属，任何跳转/切换/内容重建都不影响它 */
+#stable-bg {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
+    url('assets/ticket-art.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+#stable-bg.stable-bg--active { display: block; }
+#stable-bg.stable-bg--gongle {
   background-image:
     linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
     url('assets/gongle.jpg');
@@ -1249,6 +1249,14 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* ===== 乐器间切换：仅内容轻淡入（背景 fixed 不动），丝滑不卡顿 ===== */
+.detail-wrap.detail-switch {
+  animation: detail-switch 0.5s ease-out;
+}
+@keyframes detail-switch {
+  from { opacity: 0.35; }
+  to   { opacity: 1; }
+}
 
 /* ===== Carousel 式乐器切换：仅上层图文卡片滑动转场（快而丝滑） =====
    转场只作用于 .instrument-card（图文卡片），背景与导航条保持稳定；
@@ -1402,6 +1410,9 @@ button { -webkit-tap-highlight-color: transparent; }
 </style>
 </head>
 <body>
+
+<!-- body 级常驻古画背景层：详情页 fixed 固定全屏，任何跳转/切换都不消失 -->
+<div id="stable-bg" aria-hidden="true"></div>
 
 <div id="shader" aria-hidden="true"></div>
 
@@ -1920,6 +1931,9 @@ function activateScene(key) {
   // 乐器介绍背景：宫乐图用宫乐图本幅，其余保持原样
   const vd = document.getElementById('view-detail');
   if (vd) vd.classList.toggle('view-detail--gongle', sc.key === 'gongle');
+  // body 级常驻背景层同步场景古画（宫乐/合乐）
+  const sb = document.getElementById('stable-bg');
+  if (sb) sb.classList.toggle('stable-bg--gongle', sc.key === 'gongle');
   // 展卷画卷图
   const pimg = document.getElementById('paintingImg');
   if (pimg) { pimg.src = sc.scrollImg; pimg.alt = src.ticketName + (lang === 'en' ? ' (whole scroll)' : '（整卷）'); }
@@ -2387,6 +2401,9 @@ function route() {
     renderDetail(m[1]);
     showDetail.classList.add("active");
     showScroll.classList.remove("active");
+    // 详情视图激活 body 级常驻背景层（不随内容重建消失）
+    const sb = document.getElementById('stable-bg');
+    if (sb) sb.classList.add('stable-bg--active');
     document.body.classList.remove("page-leaving");
     // 详情视图：恢复原生滚动以阅读正文
     document.documentElement.style.overflow = 'auto';
@@ -2397,18 +2414,19 @@ function route() {
     const detailWrapEl = document.getElementById("detailWrap");
     const cardEl = detailWrapEl.querySelector('.instrument-card');
     if (cardEl) cardEl.classList.remove("carousel-out", "carousel-in", "to-next", "to-prev");
-    if (window.__switchInstrument !== true) {
-      // 仅首次进入详情做入场淡入；prev/next 切换乐器不做任何转场
-      detailWrapEl.classList.remove("detail-enter");
-      void detailWrapEl.offsetWidth;
-      detailWrapEl.classList.add("detail-enter");
-    }
+    const firstEnter = window.__switchInstrument !== true;
     window.__switchInstrument = false;
+    detailWrapEl.classList.remove(firstEnter ? "detail-enter" : "detail-switch");
+    void detailWrapEl.offsetWidth;
+    detailWrapEl.classList.add(firstEnter ? "detail-enter" : "detail-switch");
     const scN = cur();
     document.title = byId[m[1]] ? byId[m[1]].full + " · " + ((lang === 'en' && scN.en) ? scN.en.ticketName : scN.ticketName) : document.title;
   } else {
     showScroll.classList.add("active");
     showDetail.classList.remove("active");
+    // 画卷视图隐藏 body 级背景层（画卷自带背景覆盖）
+    const sb = document.getElementById('stable-bg');
+    if (sb) sb.classList.remove('stable-bg--active');
     document.body.classList.remove("page-leaving");
     // 画卷视图：锁定原生滚动，保持全屏横向展卷
     document.documentElement.style.overflow = 'hidden';
