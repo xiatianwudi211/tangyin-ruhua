@@ -2281,12 +2281,15 @@ renderIndex();
 function zoomable(stage, contentEl, contain, minScale) {
   minScale = minScale || 1;
   let s = 1, tx = 0, ty = 0, suppressClick = false;
-  const viewW = stage.clientWidth;
-  const viewH = stage.clientHeight;
+  let viewW = stage.clientWidth;
+  let viewH = stage.clientHeight;
   const img = contentEl.querySelector("img");
   // 基础显示尺寸：fill=铺满容器宽（画卷）；contain=整件放入舞台（详情乐器）
   let baseW = 1, baseH = 1;
   function compute() {
+    // 实时读取舞台尺寸：初始化时元素可能尚未布局（clientHeight=0），图片加载/布局变化后需重算
+    viewW = stage.clientWidth;
+    viewH = stage.clientHeight;
     const natA = (img && img.naturalWidth) ? (img.naturalHeight / img.naturalWidth) : 1;
     if (contain) {
       baseW = viewH / natA;
@@ -2306,6 +2309,7 @@ function zoomable(stage, contentEl, contain, minScale) {
     ty = Math.max((H > viewH ? viewH - H : 0), Math.min((H > viewH ? 0 : (viewH - H) / 2), ty));
   };
   const fit = () => {
+    compute();
     s = 1;
     tx = (baseW > viewW ? 0 : (viewW - baseW) / 2);
     ty = (baseH > viewH ? 0 : (viewH - baseH) / 2);
@@ -2370,10 +2374,11 @@ function zoomable(stage, contentEl, contain, minScale) {
   }, true);
 
   if (img && !img.complete) {
-    img.addEventListener("load", () => { compute(); fit(); }, { once: true });
+    img.addEventListener("load", () => { fit(); }, { once: true });
   }
-
   fit();
+  // 下一帧布局完成后再 fit 一次，兜底初始化时舞台尺寸为 0 的情况
+  requestAnimationFrame(() => requestAnimationFrame(() => fit()));
   return {
     zoomIn: () => zoomAt(1.3, viewW / 2, viewH / 2),
     zoomOut: () => zoomAt(1 / 1.3, viewW / 2, viewH / 2),
