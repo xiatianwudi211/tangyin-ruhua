@@ -699,6 +699,40 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   .dc-card { will-change: auto; }
   .dc-arrow, .dc-dot { transition: none; }
 }
+
+/* ---- SpecularButton 高光按钮（国风绢金高光，跟随鼠标） ---- */
+.specular {
+  position: relative;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+}
+.specular__light {
+  position: absolute;
+  inset: -22px;
+  z-index: 1;
+  display: block;
+  width: calc(100% + 44px);
+  height: calc(100% + 44px);
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--sb-x, 50%) var(--sb-y, 50%),
+    rgba(220,180,110,0.30) 0%,
+    rgba(220,180,110,0.10) 38%,
+    rgba(220,180,110,0) 62%
+  );
+  opacity: 0;
+  transition: opacity .35s ease;
+  border-radius: inherit;
+}
+.specular:hover .specular__light,
+.specular:focus-visible .specular__light { opacity: 1; }
+.specular:active { transform: scale(0.97); }
+/* 高光表面反光描边：随悬停微微提亮 */
+.specular { box-shadow: inset 0 0 0 1px rgba(232,200,122,0.0); transition: box-shadow .3s ease, transform .25s cubic-bezier(.2,.8,.2,1); }
+.specular:hover { box-shadow: inset 0 0 0 1px rgba(232,200,122,0.45), 0 10px 24px -14px rgba(0,0,0,.45); }
+@media (prefers-reduced-motion: reduce) {
+  .specular, .specular__light { transition: none; }
+}
 /* 全局描金波线由 body 级 #bg-waves 恒定提供（见 #bg-waves 规则） */
 /* 锦鲤群背景层：展卷界面画卷之上、展厅射灯之下，低透明 */
 .scroll-waves {
@@ -1583,8 +1617,8 @@ button { -webkit-tap-highlight-color: transparent; }
 
 <!-- 中 / EN 语言切换 -->
 <div class="lang-toggle" id="langToggle" role="group" aria-label="语言 / Language">
-  <button type="button" data-lang="zh" class="active">中</button>
-  <button type="button" data-lang="en">EN</button>
+  <button type="button" data-lang="zh" class="active specular">中</button>
+  <button type="button" data-lang="en" class="specular">EN</button>
 </div>
 
 <!-- ===== 独立入场界面：文件夹与票根（亚麻色） ===== -->
@@ -1659,8 +1693,8 @@ button { -webkit-tap-highlight-color: transparent; }
   </div>
   <!-- 画卷间切换：合乐图 ↔ 宫乐图（卷起→换画→展开） -->
   <div class="scroll-switch" id="scrollSwitch" role="group" aria-label="切换画卷">
-    <button type="button" data-scene="gongle"><span data-i18n="switchGongle">赏 · 唐人宫乐</span></button>
-    <button type="button" data-scene="hele" class="active"><span data-i18n="switchHele">观 · 合乐长卷</span></button>
+    <button type="button" data-scene="gongle" class="specular"><span data-i18n="switchGongle">赏 · 唐人宫乐</span></button>
+    <button type="button" data-scene="hele" class="active specular"><span data-i18n="switchHele">观 · 合乐长卷</span></button>
   </div>
 </section>
 
@@ -2587,9 +2621,9 @@ function initDetailCarousel(startIndex) {
   const cardsHtml = instruments.map((it) => '<div class="dc-card">' + buildCardHTML(it) + '<div class="dc-tint"></div></div>').join('');
   const topbar =
     '<div class="detail-topbar">'
-    + '<a class="back-link" href="#/" aria-label="' + t.back + '">'
+    + '<a class="back-link specular" href="#/" aria-label="' + t.back + '">'
     + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg>' + t.back + '</a>'
-    + '<button type="button" class="detail-close" id="detailClose" aria-label="' + t.exit + '">'
+    + '<button type="button" class="detail-close specular" id="detailClose" aria-label="' + t.exit + '">'
     + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' + t.exit + '</button>'
     + '</div>';
   const arrows =
@@ -3030,6 +3064,38 @@ route();
 
 // 初始化默认场景（合乐图）：重渲热点/索引并配置开始界面背景
 activateScene(sceneKey);
+
+/* ===== SpecularButton 高光：给 .specular 按钮注入高光层并跟随鼠标 ===== */
+(function specular() {
+  const SEL = '.specular';
+  function ensure(btn) {
+    if (!btn || btn.querySelector('.specular__light')) return;
+    const l = document.createElement('span');
+    l.className = 'specular__light';
+    l.setAttribute('aria-hidden', 'true');
+    btn.appendChild(l);
+  }
+  document.querySelectorAll(SEL).forEach(ensure);
+  // 鼠标跟随（事件委托，动态生成按钮同样生效）
+  document.addEventListener('pointermove', (e) => {
+    const t = e.target;
+    const btn = (t && t.closest) ? t.closest(SEL) : null;
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    if (!r.width) return;
+    btn.style.setProperty('--sb-x', (((e.clientX - r.left) / r.width) * 100).toFixed(2) + '%');
+    btn.style.setProperty('--sb-y', (((e.clientY - r.top) / r.height) * 100).toFixed(2) + '%');
+  }, { passive: true });
+  // 监听动态新增按钮（如详情页返回/退出）
+  const mo = new MutationObserver((muts) => {
+    muts.forEach(m => m.addedNodes.forEach(n => {
+      if (n.nodeType !== 1) return;
+      if (n.matches && n.matches(SEL)) ensure(n);
+      if (n.querySelectorAll) n.querySelectorAll(SEL).forEach(ensure);
+    }));
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+})();
 
 /* ===== 加载界面：等网页全部资源 + 字体加载完整后淡出 ===== */
 (function () {
