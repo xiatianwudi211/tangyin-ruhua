@@ -540,8 +540,18 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 #view-detail {
   position: relative;
   min-height: 100vh;
-  /* 已按用户要求去掉背景与波线：暖白纯色底，干净 */
-  background: #fbf9f4;
+  /* 乐器介绍背景 = 当前场景古画：合乐场景用合乐图，宫乐场景用宫乐图 */
+  background-image:
+    linear-gradient(rgba(244,238,224,0.08), rgba(244,238,224,0.08)),
+    url('assets/hele-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#view-detail.view-detail--gongle {
+  background-image:
+    linear-gradient(rgba(244,238,224,0.08), rgba(244,238,224,0.08)),
+    url('assets/gongle-bg.jpg');
 }
 /* 详情页 = DepthCarousel 纵深轮播容器 */
 #detailWrap {
