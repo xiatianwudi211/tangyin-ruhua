@@ -158,15 +158,15 @@ a { color: var(--qing-deep); text-decoration: none; }
   font-size: 13px;
   letter-spacing: 2px;
   color: var(--ink-soft);
-  background: var(--paper-light);
-  border: 1px solid var(--line);
+  background: transparent;
+  border: 1px solid rgba(232,200,122,.3);
   padding: 6px 16px;
-  border-radius: 2px;
+  border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.toolbar button:hover { color: var(--ink); border-color: var(--ink-faint); }
-.toolbar button.primary { border-color: var(--qing); color: var(--qing-deep); }
+.toolbar button:hover { color: var(--ink); border-color: rgba(232,200,122,.6); background: rgba(232,200,122,.1); }
+.toolbar button.primary { border-color: rgba(111,143,140,.55); color: var(--qing-deep); background: rgba(111,143,140,.12); }
 .toolbar .hint {
   font-size: 12px;
   color: var(--ink-faint);
@@ -1281,22 +1281,22 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 .btn.btn--primary {
   background: linear-gradient(180deg, #c39a4a, #a97f2e);
   color: var(--primary-foreground);
-  border-color: #8a6a24;
+  border-color: rgba(138,106,36,.55);
   box-shadow: var(--shadow-gold);
 }
 .btn.btn--primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 30px rgba(185,140,62,.42);
 }
-.btn.btn--outline { background: var(--card); color: var(--ink-soft); border-color: var(--border); }
-.btn.btn--outline:hover { color: var(--ink); border-color: var(--ink-faint); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.btn.btn--outline { background: transparent; color: var(--ink-soft); border-color: rgba(232,200,122,.32); }
+.btn.btn--outline:hover { color: var(--ink); border-color: rgba(232,200,122,.6); background: rgba(232,200,122,.12); transform: translateY(-1px); box-shadow: none; }
 .btn.btn--ghost { background: transparent; color: var(--ink-soft); border-color: transparent; }
 .btn.btn--ghost:hover { color: var(--ink); background: rgba(0,0,0,.05); }
 .btn.btn--destructive { background: var(--destructive); color: #fff; border-color: #8c3026; }
 .btn.btn--sm { font-size: 12px; padding: 5px 13px; }
 .btn.btn--lg { font-size: 15px; padding: 13px 40px; letter-spacing: 6px; border-radius: var(--radius); }
-.btn.btn--gold { background: rgba(201,169,97,.10); color: #e8c87a; border-color: rgba(201,169,97,.5); }
-.btn.btn--gold:hover { background: rgba(201,169,97,.18); box-shadow: 0 0 28px rgba(201,169,97,.32); }
+.btn.btn--gold { background: rgba(232,200,122,.08); color: #e8c87a; border-color: rgba(232,200,122,.35); }
+.btn.btn--gold:hover { background: rgba(232,200,122,.16); box-shadow: 0 0 24px rgba(232,200,122,.28); }
 
 /* ---- 卡片：统一表面 + 悬停纵深 ---- */
 .card {
