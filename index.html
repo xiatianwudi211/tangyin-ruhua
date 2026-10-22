@@ -2566,7 +2566,8 @@ function renderDetail(id) {
   } catch (e) {}
   // 淡入（最初形式）
   gsap.fromTo(card, { autoAlpha: 0, y: 16, filter: 'blur(8px)' }, { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out', onComplete: () => gsap.set(card, { clearProps: 'filter' }) });
-  gsap.fromTo(nav, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, delay: 0.15 });
+  const navEl = wrap.querySelector('.detail-nav');
+  if (navEl) gsap.fromTo(navEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, delay: 0.15 });
 }
 
 /* ============ 路由 ============ */
