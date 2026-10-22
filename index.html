@@ -555,23 +555,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   border-right: 1px solid rgba(255,250,240,0.25);
   box-shadow: 0 30px 90px rgba(8,6,4,0.5);
 }
-/* LineWaves 描金波线背景层：铺满详情、垫在磨砂卡后、低透明露出合乐图 */
-.detail-waves {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.line-waves__canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
+/* 全局描金波线由 body 级 #bg-waves 恒定提供（见 #bg-waves 规则） */
 /* 锦鲤群背景层：展卷界面画卷之上、展厅射灯之下，低透明 */
 .scroll-waves {
   position: absolute;
@@ -844,7 +828,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   z-index: 0;
   background-image:
     linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
-    url('assets/ticket-art.jpg');
+    url('assets/hele-bg.jpg');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
@@ -856,7 +840,25 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 #stable-bg.stable-bg--gongle {
   background-image:
     linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
-    url('assets/gongle.jpg');
+    url('assets/gongle-bg.jpg');
+}
+
+/* 全局恒定波线层：fixed 固定全屏、不随详情重建，描金 LineWaves 动效 */
+#bg-waves {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+#bg-waves .line-waves__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 /* ===== 加载界面：等网页全部资源加载完整后淡出 ===== */
@@ -1466,6 +1468,9 @@ button { -webkit-tap-highlight-color: transparent; }
 <!-- body 级常驻古画背景层：fixed 固定全屏、恒定显示，任何跳转/切换都不消失 -->
 <div id="stable-bg" aria-hidden="true"></div>
 
+<!-- 全局描金波线层：fixed 固定全屏、不随界面重建，与背景一起稳定存在 -->
+<div id="bg-waves" data-line-waves data-lw-opacity="0.5" aria-hidden="true"></div>
+
 <!-- ===== 加载界面：网页全部资源加载完前显示 ===== -->
 <div id="loader" aria-hidden="true">
   <div class="loader-seal">樂</div>
@@ -1566,7 +1571,6 @@ button { -webkit-tap-highlight-color: transparent; }
 
 <!-- ===== 乐器详情 ===== -->
 <section id="view-detail" class="view">
-  <div class="detail-waves" data-line-waves aria-hidden="true"></div>
   <div class="detail-wrap" id="detailWrap"></div>
 </section>
 
