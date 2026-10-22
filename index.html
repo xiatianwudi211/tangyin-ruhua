@@ -542,11 +542,14 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   min-height: 100vh;
   background-color: #17110b;
 }
-/* 独立背景层：不随内容重建、不受动画合成影响，稳定存在 */
+/* 独立背景层：fixed 固定全屏，任何跳转/切换/滚动都不影响背景视觉 */
 #view-detail::before {
   content: "";
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 0;
   background-image:
     linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
@@ -555,6 +558,9 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   background-repeat: no-repeat;
   background-position: center;
   pointer-events: none;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 .detail-wrap {
   position: relative;
