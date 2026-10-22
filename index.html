@@ -540,6 +540,10 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 #view-detail {
   position: relative;
   min-height: 100vh;
+  /* 已移除独立古画背景层与描金波线动效；改用浅色绢本底，干净且提亮 */
+  background:
+    radial-gradient(circle at 50% 20%, rgba(255,252,243,0.85) 0%, transparent 60%),
+    linear-gradient(160deg, #f2ead9 0%, #e7dcc6 100%);
 }
 .detail-wrap {
   position: relative;
@@ -816,50 +820,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   width: min(420px, 88%);
   margin: 0 auto;
 }
-/* 宫乐图乐器介绍背景 = 宫乐图本幅（合乐图等其余保持原样） */
-/* body 级常驻背景层：fixed 固定全屏、恒定显示，不随任何界面转换出现/隐藏 */
-#stable-bg {
-  display: block;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  background-image:
-    linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
-    url('assets/hele-bg.jpg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  pointer-events: none;
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-#stable-bg.stable-bg--gongle {
-  background-image:
-    linear-gradient(rgba(16,12,8,0.55), rgba(16,12,8,0.55)),
-    url('assets/gongle-bg.jpg');
-}
-
-/* 全局恒定波线层：fixed 固定全屏、不随详情重建，描金 LineWaves 动效 */
-#bg-waves {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-#bg-waves .line-waves__canvas {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
+/* 乐器介绍背景：已按用户要求移除独立古画背景层与描金波线动效，详情页用深色墨底兜底 */
 
 /* ===== 加载界面：等网页全部资源加载完整后淡出 ===== */
 #loader {
@@ -1465,12 +1426,6 @@ button { -webkit-tap-highlight-color: transparent; }
 </head>
 <body>
 
-<!-- body 级常驻古画背景层：fixed 固定全屏、恒定显示，任何跳转/切换都不消失 -->
-<div id="stable-bg" aria-hidden="true"></div>
-
-<!-- 全局描金波线层：fixed 固定全屏、不随界面重建，与背景一起稳定存在 -->
-<div id="bg-waves" data-line-waves data-lw-opacity="0.5" aria-hidden="true"></div>
-
 <!-- ===== 加载界面：网页全部资源加载完前显示 ===== -->
 <div id="loader" aria-hidden="true">
   <div class="loader-seal">樂</div>
@@ -1994,9 +1949,6 @@ function activateScene(key) {
   // 乐器介绍背景：宫乐图用宫乐图本幅，其余保持原样
   const vd = document.getElementById('view-detail');
   if (vd) vd.classList.toggle('view-detail--gongle', sc.key === 'gongle');
-  // body 级常驻背景层同步场景古画（宫乐/合乐）
-  const sb = document.getElementById('stable-bg');
-  if (sb) sb.classList.toggle('stable-bg--gongle', sc.key === 'gongle');
   // 展卷画卷图
   const pimg = document.getElementById('paintingImg');
   if (pimg) { pimg.src = sc.scrollImg; pimg.alt = src.ticketName + (lang === 'en' ? ' (whole scroll)' : '（整卷）'); }
