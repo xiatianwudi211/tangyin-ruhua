@@ -2386,22 +2386,18 @@ function route() {
     document.documentElement.style.overflow = 'auto';
     document.body.style.overflow = 'auto';
     window.scrollTo(0, 0);
-    // Carousel 式切换：prev/next 用 tilt 卡片转场进入；进入画卷/退出用淡入上移
-    const carouselDir = window.__carouselDir || 0;
+    // 乐器间切换去掉卡片翻卡转场：切换瞬间替换内容，背景/图片保持稳定
     window.__carouselDir = 0;
     const detailWrapEl = document.getElementById("detailWrap");
     const cardEl = detailWrapEl.querySelector('.instrument-card');
-    if (carouselDir && cardEl) {
-      cardEl.classList.remove("carousel-out", "carousel-in", "to-next", "to-prev");
-      cardEl.style.setProperty('--carousel-in-x', carouselDir > 0 ? '-42px' : '42px');
-      cardEl.classList.add("carousel-in");
-      // 转场期间直接显形，避免内容空白；转场即入场动效
-      detailWrapEl.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
-    } else {
+    if (cardEl) cardEl.classList.remove("carousel-out", "carousel-in", "to-next", "to-prev");
+    if (window.__switchInstrument !== true) {
+      // 仅首次进入详情做入场淡入；prev/next 切换乐器不做任何转场
       detailWrapEl.classList.remove("detail-enter");
       void detailWrapEl.offsetWidth;
       detailWrapEl.classList.add("detail-enter");
     }
+    window.__switchInstrument = false;
     const scN = cur();
     document.title = byId[m[1]] ? byId[m[1]].full + " · " + ((lang === 'en' && scN.en) ? scN.en.ticketName : scN.ticketName) : document.title;
   } else {
@@ -2419,24 +2415,15 @@ function route() {
 }
 window.addEventListener("hashchange", route);
 
-/* 乐器详情 prev/next：Carousel tilt 卡片转场（先翻出，再换内容翻入） */
+/* 乐器详情 prev/next：直接切换，不做卡片翻卡转场（保持背景/图片稳定） */
 document.addEventListener("click", (e) => {
   const a = e.target.closest("#view-detail a.prev, #view-detail a.next");
   if (!a) return;
   const href = a.getAttribute("href");
   if (!href) return;
-  const dir = a.classList.contains("next") ? 1 : -1;
   e.preventDefault();
-  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const wrap = document.getElementById("detailWrap");
-  if (reduce) { location.hash = href; return; }
-  const card = wrap ? wrap.querySelector('.instrument-card') : null;
-  if (card) {
-    card.classList.remove("carousel-out", "carousel-in", "to-next", "to-prev");
-    card.classList.add("carousel-out", dir > 0 ? "to-next" : "to-prev");
-  }
-  window.__carouselDir = dir;
-  setTimeout(() => { location.hash = href; }, 180);
+  window.__switchInstrument = true;
+  location.hash = href;
 });
 
 /* 热点点击：乐器跳详情；皇帝光标切换宫乐图提示卡 */
