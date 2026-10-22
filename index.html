@@ -244,27 +244,6 @@ a { color: var(--qing-deep); text-decoration: none; }
   -webkit-user-drag: none;
   pointer-events: none;
 }
-/* 画卷简介铭牌：绢纸半透明小卡，浮于画卷之上（宫乐图置于桌面），不遮挡主体 */
-.scroll-plaque {
-  position: absolute;
-  max-width: 300px;
-  padding: 9px 14px;
-  background: rgba(250,246,238,.66);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  border: 1px solid rgba(232,200,122,.45);
-  border-left: 3px solid rgba(185,140,62,.6);
-  border-radius: 2px;
-  color: var(--ink-soft);
-  font-size: 12px;
-  line-height: 1.75;
-  letter-spacing: 1px;
-  text-align: left;
-  pointer-events: none;
-  z-index: 8;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 6px 18px rgba(0,0,0,.12);
-}
 /* 画卷两端的木轴 */
 .painting-wrapper::before,
 .painting-wrapper::after {
@@ -1273,7 +1252,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 @keyframes carouselOutNext { to { transform: translateX(42px) scale(0.985); opacity: 0; } }
 @keyframes carouselOutPrev { to { transform: translateX(-42px) scale(0.985); opacity: 0; } }
 @keyframes carouselIn {
-  from { transform: translateX(var(--carousel-in-x, -42px)) scale(0.99); opacity: 0; }
+  from { transform: translateX(var(--carousel-in-x, -42px)) scale(0.99); opacity: 1; }
   to   { transform: perspective(1200px) translateZ(0); opacity: 1; }
 }
 
@@ -1487,8 +1466,6 @@ button { -webkit-tap-highlight-color: transparent; }
       <div class="scroll-track-inner" id="scrollTrackInner">
         <div class="painting-wrapper" id="painting">
           <img src="assets/scroll.jpg" alt="合乐图（五代南唐·传周文矩）整卷" id="paintingImg">
-          <!-- 画卷简介铭牌（合乐图/宫乐图各自的中英简介） -->
-          <div class="scroll-plaque" id="scrollPlaque" aria-hidden="true"></div>
           <!-- 热点由 JS 注入 -->
         </div>
       </div>
@@ -1624,7 +1601,6 @@ const SCENES = {
       { img: 'intro_seg3.jpg', lx: '50%', ly: '55%' }
     ] },
     toolbar: '滚轮 / 拖动横向展卷 · 点击朱砂墨点进入乐器',
-    plaque: { x: 85, y: 12, text: '唐音入画 · 合乐图<br>传五代南唐·周文矩绘，美国芝加哥美术馆藏。<br>十数乐伎依序而奏，寻访十一器。' },
     emperor: {
       x: 20, y: 46, label: '宫中主人 · 观乐',
       tip: '<b>宫乐图 · 唐音入画</b><i>中坐者乃宫中主人（帝王），端居榻上凝神观乐；身旁侍者乐工环侍，右侧乐伎依序合奏钟磬、建鼓、笙箫、琵琶诸器。正是五代南唐传周文矩《合乐图》所绘的宫廷雅乐盛景。</i>'
@@ -1763,7 +1739,6 @@ const SCENES = {
       introSub: 'Tang Music · Ensemble Scroll',
       introDesc: 'Attributed to Zhou Wenju of the Southern Tang · The Art Institute of Chicago<br>Upon the scroll, a dozen musicians play in turn.<br>Move the cursor to seek eleven instruments among silk and light.',
       toolbar: 'Scroll / drag to traverse · click a cinnabar dot to enter an instrument',
-      plaque: { x: 85, y: 12, text: 'Tang Music · Ensemble Scroll<br>Attr. Zhou Wenju, Southern Tang · The Art Institute of Chicago.<br>A dozen musicians in turn; seek eleven instruments.' },
       emperor: {
         label: 'Master of the Court · Listening to Music',
         tip: '<b>Tang Ladies\u2019 Music</b><i>At the centre sits the master of the court, gazing at the music from a couch, while attendants and musicians gather around; to the right, the players strike bells and chimes, beat the drums, and blow sheng, xiao and pipa in turn \u2014 the courtly elegance painted in the Ensemble Scroll attributed to Zhou Wenju.</i>'
@@ -1819,7 +1794,6 @@ const SCENES = {
     introDesc: '传唐·佚名　绢本设色<br>仕女围坐方桌，宴饮奏乐，闲适雍容。<br>移动光标，于绢本光影间寻访五器。',
     introBg: { mode: 'single', img: 'assets/gongle.jpg', lx: '50%', ly: '45%' },
     toolbar: '滚轮 / 拖动横向展卷 · 点击朱砂墨点进入乐器',
-    plaque: { x: 50, y: 56, text: '唐人宫乐图<br>传唐·佚名　绢本设色。仕女围坐方桌，<br>宴饮奏乐，闲适雍容，寻访五器。' },
     emperor: null,
     instruments: [
       {
@@ -1889,7 +1863,6 @@ const SCENES = {
       introSub: 'Tang Music · Lady Musicians',
       introDesc: 'Attr. unknown artist of the Tang · Ink and colour on silk<br>Ladies gather around a square table, feasting and playing music in idle elegance.<br>Move the cursor to seek five instruments among silk and light.',
       toolbar: 'Scroll / drag to traverse · click a cinnabar dot to enter an instrument',
-      plaque: { x: 50, y: 56, text: 'Palace Music of the Tang<br>Attr. unknown artist of the Tang · ink and colour on silk.<br>Ladies around a square table, feasting and playing; seek five instruments.' },
       emperor: null,
       instruments: [
         { name: 'Bili', full: 'Bili · Kucha Reed Pipe', tag: 'Wind · Double reed',
@@ -1947,19 +1920,6 @@ function activateScene(key) {
     const h1 = ic.querySelector('h1'); if (h1) h1.textContent = src.introTitle;
     const sub = ic.querySelector('.sub'); if (sub) sub.textContent = src.introSub;
     const desc = ic.querySelector('.desc'); if (desc) desc.innerHTML = src.introDesc;
-  }
-  // 画卷简介铭牌：位置与文案随场景切换（中英随语言）
-  const plaque = document.getElementById('scrollPlaque');
-  if (plaque) {
-    const pl = src.plaque || sc.plaque;
-    if (pl) {
-      plaque.innerHTML = pl.text;
-      plaque.style.left = pl.x + '%';
-      plaque.style.top = pl.y + '%';
-      plaque.style.display = '';
-    } else {
-      plaque.style.display = 'none';
-    }
   }
   const tb = document.querySelector('.toolbar--float .hint');
   if (tb) tb.textContent = src.toolbar;
@@ -2367,6 +2327,16 @@ function renderDetail(id) {
   // 悬浮退出按键 → 返回画卷
   const closeBtn = document.getElementById("detailClose");
   if (closeBtn) closeBtn.addEventListener("click", () => { location.hash = "#/"; });
+
+  // 预加载相邻乐器图 + 当前图加载完成淡入（消除切换时背景空白）
+  [prev, next].forEach(x => { const im = new Image(); im.src = 'assets/' + x.id + '.png'; });
+  const dImg = wrap.querySelector('.detail-content img, .detail-content .attached-card img');
+  if (dImg) {
+    dImg.style.opacity = '0';
+    dImg.style.transition = 'opacity .45s ease';
+    const show = () => { dImg.style.opacity = '1'; };
+    if (dImg.complete) show(); else dImg.addEventListener('load', show, { once: true });
+  }
 
   // scroll reveal：详情内容滚动显现（进入视口 → +.in），仅一次
   if (!window.__revealObs) {
