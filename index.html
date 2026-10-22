@@ -2798,8 +2798,12 @@ route();
     }
     function onUp(e) {
       if (s.id !== null && e.pointerId !== s.id) return;
+      // 纯点击（几乎未拖拽）：直接撕票进入，避免“点了没反应”
+      const cdx = s.point.x - s.start.x, cdy = s.point.y - s.start.y;
+      const isClick = (cdx * cdx + cdy * cdy) < 120;
       s.id = null;
       try { if (stubPiece.hasPointerCapture(e.pointerId)) stubPiece.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (isClick && !torn) { tearNow(); return; }
       if (allTorn()) {
         /* CSS transition 掉落（不依赖 rAF），setTimeout 保证 finish */
         const dir = s.sign * 50;
