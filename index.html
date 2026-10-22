@@ -597,12 +597,13 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   font-size: 13px;
   letter-spacing: 2px;
   color: var(--ink-faint);
-  border: 1px solid var(--line);
-  padding: 6px 14px;
-  border-radius: 2px;
+  border: 0;
+  padding: 6px 12px 6px 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
   transition: color 0.2s, border-color 0.2s;
 }
-.back-link:hover { color: var(--ink); border-color: var(--ink-faint); }
+.back-link:hover { color: var(--ink); border-bottom-color: rgba(185,140,62,.55); }
 .back-link svg { width: 14px; height: 14px; }
 /* 悬浮退出按键（乐器介绍弹出后右上角） */
 .detail-close {
@@ -610,9 +611,9 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   z-index: 60;
   display: inline-flex; align-items: center; gap: 7px;
   padding: 9px 16px;
-  border: 1px solid rgba(201,169,97,.65);
-  border-radius: var(--radius);
-  background: rgba(24,19,14,.55);
+  border: 1px solid rgba(232,200,122,.35);
+  border-radius: 999px;
+  background: rgba(24,19,14,.42);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   color: #e8c87a;
@@ -622,9 +623,9 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 }
 .detail-close svg { width: 15px; height: 15px; }
 .detail-close:hover {
-  background: rgba(185,140,62,.9); color: #2a2016;
-  border-color: rgba(201,169,97,.95);
-  box-shadow: 0 8px 26px rgba(0,0,0,.4);
+  background: rgba(232,200,122,.9); color: #2a2016;
+  border-color: rgba(232,200,122,.9);
+  box-shadow: 0 8px 26px rgba(0,0,0,.35);
   transform: translateY(-1px);
 }
 
@@ -647,15 +648,15 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   font-size: 12px;
   letter-spacing: 2px;
   color: var(--ink-soft);
-  background: var(--paper-light);
-  border: 1px solid var(--line);
+  background: transparent;
+  border: 1px solid transparent;
   padding: 4px 14px;
-  border-radius: 2px;
+  border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.detail-tools button:hover { color: var(--ink); border-color: var(--ink-faint); }
-.detail-tools button.primary { border-color: var(--qing); color: var(--qing-deep); }
+.detail-tools button:hover { color: var(--ink); background: rgba(185,140,62,.14); border-color: rgba(185,140,62,.45); }
+.detail-tools button.primary { color: var(--qing-deep); background: rgba(111,143,140,.16); border-color: rgba(111,143,140,.5); }
 .detail-zoom {
   position: relative;
   width: 100%;
@@ -797,52 +798,26 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   margin: 0 auto;
 }
 .attached-card {
-  --ac-border: rgba(185,140,62,.62);
+  /* 乐器图直接以透明原图呈现：去掉卡片背景、边框与阴影 */
   position: relative;
   display: block;
-  padding: 11px;
-  background:
-    linear-gradient(180deg, #f4ecd9 0%, #e9ddc2 100%);
-  border: 1px solid var(--ac-border);
-  border-radius: 3px;
-  box-shadow:
-    inset 0 0 0 2px rgba(255,252,242,.5),
-    inset 0 0 0 3px rgba(185,140,62,.16),
-    0 18px 44px rgba(50,30,12,.32),
-    0 3px 9px rgba(50,30,12,.16);
-  transform: rotate(-0.5deg);
-  transition: transform .3s cubic-bezier(.22,.61,.36,1), box-shadow .3s ease;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+  transition: none;
 }
 .attached-card:hover {
-  transform: rotate(-0.5deg) translateY(-2px);
-  box-shadow:
-    inset 0 0 0 2px rgba(255,252,242,.5),
-    inset 0 0 0 3px rgba(185,140,62,.2),
-    0 26px 56px rgba(50,30,12,.38),
-    0 4px 12px rgba(50,30,12,.2);
+  transform: none;
+  box-shadow: none;
 }
-/* 四周描金细线：像裱过的一道金边 */
-.attached-card::before {
-  content: "";
-  position: absolute; inset: 4px;
-  border: 1px solid rgba(185,140,62,.34);
-  border-radius: 2px;
-  pointer-events: none;
-}
-/* 上缘一条从画上垂下的丝带：附着感 */
-.attached-card::after {
-  content: "";
-  position: absolute; top: -15px; left: 50%;
-  width: 1px; height: 15px;
-  transform: translateX(-50%);
-  background: linear-gradient(180deg, transparent, rgba(168,58,46,.55));
-  box-shadow: 0 0 6px rgba(168,58,46,.4);
-  pointer-events: none;
-}
+.attached-card::before,
+.attached-card::after { display: none; }
 .attached-card img {
   display: block;
   width: 100%; height: auto;
-  border-radius: 1px;
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -914,12 +889,14 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   font-size: 13px;
   letter-spacing: 2px;
   color: var(--ink-soft);
-  padding: 6px 14px;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  background: var(--paper-light);
+  padding: 6px 12px 6px 0;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
   transition: color 0.2s, border-color 0.2s;
 }
+.detail-nav a:hover { color: var(--ink); border-bottom-color: rgba(185,140,62,.55); }
 .detail-nav a:hover { color: var(--qing-deep); border-color: var(--qing); }
 .detail-nav .next { margin-left: auto; }
 
