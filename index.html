@@ -566,8 +566,6 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   margin: 0 auto;
   padding: 26px 20px 60px;
   background: rgba(243,235,219,0.30);
-  backdrop-filter: blur(6px) saturate(1.1);
-  -webkit-backdrop-filter: blur(6px) saturate(1.1);
   border-left: 1px solid rgba(255,250,240,0.25);
   border-right: 1px solid rgba(255,250,240,0.25);
   box-shadow: 0 30px 90px rgba(8,6,4,0.5);
@@ -638,8 +636,6 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   border: 1px solid rgba(232,200,122,.35);
   border-radius: 999px;
   background: transparent;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   color: #e8c87a;
   font-size: 13px; letter-spacing: 3px;
   cursor: pointer;
@@ -2711,7 +2707,25 @@ route();
           if (welcome.parentNode) welcome.parentNode.removeChild(welcome);
           // 放大收尾与开始界面淡入重叠衔接：内容淡入上移 24px，只一次
           const ic = document.getElementById('intro-content');
-          if (ic) ic.classList.add('in');
+          if (ic) {
+            ic.classList.add('in');
+            // SplitText rise：开始界面标题逐字升起（无 React，原生拆分字符 + GSAP stagger）
+            if (typeof gsap !== 'undefined') {
+              const h1 = ic.querySelector('h1');
+              if (h1 && h1.getAttribute('data-split') !== '1') {
+                h1.setAttribute('data-split', '1');
+                const text = h1.textContent;
+                const chars = Array.from(text).map(ch =>
+                  '<span style="display:inline-block;white-space:pre">' + (ch === ' ' ? '&nbsp;' : ch) + '</span>'
+                ).join('');
+                h1.innerHTML = chars;
+                const spans = h1.querySelectorAll('span');
+                gsap.fromTo(spans,
+                  { autoAlpha: 0, y: 42, filter: 'blur(4px)' },
+                  { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.25, ease: 'power2.out', stagger: { each: 0.04, from: 'start' }, delay: 0.25, overwrite: true });
+              }
+            }
+          }
         }, 1000);
       }
     }
