@@ -280,7 +280,7 @@ a { color: var(--qing-deep); text-decoration: none; }
   border-radius: 3px;
   pointer-events: none;
 }
-/* 画卷间切换（合乐图 ↔ 宫乐图）：底部居中分段控件 */
+/* 画卷间切换（合乐图 ↔ 宫乐图）：最简单的普通按钮，无动效 */
 .scroll-switch {
   position: absolute;
   left: 50%;
@@ -288,63 +288,53 @@ a { color: var(--qing-deep); text-decoration: none; }
   transform: translateX(-50%);
   z-index: 61;
   display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  background: rgba(250,246,238,.9);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(185,140,62,.75);
-  border-radius: 999px;
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+  border: 0;
 }
 .scroll-switch button {
   font-family: var(--font-serif);
-  font-size: 12px;
-  letter-spacing: 2px;
-  color: var(--ink-soft);
-  background: transparent;
-  border: 0;
-  padding: 7px 15px;
-  border-radius: 999px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #3a332a;
+  background: #f3ede0;
+  border: 1px solid #b9a98a;
+  padding: 7px 16px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all .25s ease;
 }
-.scroll-switch button:hover { color: var(--ink); background: rgba(232,200,122,.22); }
 .scroll-switch button.active {
-  color: #2a2016;
-  background: linear-gradient(180deg, rgba(195,154,74,.88), rgba(169,127,46,.88));
-  box-shadow: 0 3px 10px rgba(0,0,0,.16);
+  color: #ffffff;
+  background: #b98c3e;
+  border-color: #b98c3e;
 }
-/* 中 / EN 语言切换：固定右上角，始终可用 */
+/* 中 / EN 语言切换：最简单的普通按钮，无动效 */
 .lang-toggle {
   position: fixed;
   top: 14px; right: 18px;
   z-index: 2200;
   display: inline-flex;
-  gap: 2px;
-  padding: 3px;
-  background: rgba(250,246,238,.9);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(185,140,62,.75);
-  border-radius: 999px;
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+  border: 0;
 }
 .lang-toggle button {
   font-family: var(--font-serif);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 1px;
-  color: var(--ink-soft);
-  background: transparent;
-  border: 0;
-  padding: 5px 12px;
-  border-radius: 999px;
+  color: #3a332a;
+  background: #f3ede0;
+  border: 1px solid #b9a98a;
+  padding: 6px 14px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all .25s ease;
 }
-.lang-toggle button:hover { color: var(--ink); background: rgba(232,200,122,.22); }
 .lang-toggle button.active {
-  color: #2a2016;
-  background: linear-gradient(180deg, #c39a4a, #a97f2e);
-  box-shadow: 0 2px 8px rgba(0,0,0,.22);
+  color: #ffffff;
+  background: #b98c3e;
+  border-color: #b98c3e;
 }
 
 /* ===== 热点：墨迹晕开（随画卷缩放保持对齐） ===== */
@@ -1620,8 +1610,8 @@ button { -webkit-tap-highlight-color: transparent; }
 
 <!-- 中 / EN 语言切换 -->
 <div class="lang-toggle" id="langToggle" role="group" aria-label="语言 / Language">
-  <button type="button" data-lang="zh" class="active specular">中</button>
-  <button type="button" data-lang="en" class="specular">EN</button>
+  <button type="button" data-lang="zh" class="active">中</button>
+  <button type="button" data-lang="en">EN</button>
 </div>
 
 <!-- ===== 独立入场界面：文件夹与票根（亚麻色） ===== -->
@@ -1696,8 +1686,8 @@ button { -webkit-tap-highlight-color: transparent; }
   </div>
   <!-- 画卷间切换：合乐图 ↔ 宫乐图（卷起→换画→展开） -->
   <div class="scroll-switch" id="scrollSwitch" role="group" aria-label="切换画卷">
-    <button type="button" data-scene="gongle" class="specular"><span data-i18n="switchGongle">赏 · 唐人宫乐</span></button>
-    <button type="button" data-scene="hele" class="active specular"><span data-i18n="switchHele">观 · 合乐长卷</span></button>
+    <button type="button" data-scene="gongle"><span data-i18n="switchGongle">赏 · 唐人宫乐</span></button>
+    <button type="button" data-scene="hele" class="active"><span data-i18n="switchHele">观 · 合乐长卷</span></button>
   </div>
 </section>
 
