@@ -553,6 +553,23 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
     linear-gradient(rgba(244,238,224,0.08), rgba(244,238,224,0.08)),
     url('assets/gongle-bg.jpg');
 }
+/* 乐器介绍背景：古画之上的金色丝绢波线动效（LineWaves，透明度 90%） */
+.detail-waves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.detail-waves .line-waves__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 /* 详情页 = DepthCarousel 纵深轮播容器 */
 #detailWrap {
   position: relative;
@@ -1649,6 +1666,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 <!-- ===== 乐器详情 ===== -->
 <section id="view-detail" class="view">
+  <div class="detail-waves" data-line-waves data-lw-opacity="0.9" data-lw-color1="#dcb46e" data-lw-color2="#c9a961" data-lw-color3="#9c7f3f" aria-hidden="true"></div>
   <div class="detail-wrap" id="detailWrap"></div>
 </section>
 
@@ -3031,6 +3049,7 @@ activateScene(sceneKey);
   setTimeout(finish, 14000); // 兜底：极端情况下最多展示 14s
 })();
 </script>
+<script src="assets/line-waves.js"></script>
 <script src="assets/koi-school.js"></script>
 <script src="assets/holo-card.js"></script>
 <script src="assets/buttons.js"></script>
