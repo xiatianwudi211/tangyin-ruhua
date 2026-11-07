@@ -1372,12 +1372,16 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   font-family: var(--font);
   user-select: none; -webkit-user-select: none;
   /* 移除 drop-shadow 滤镜：transform 动画时它会强制离屏重算导致卡顿，改用 .folder-cast 软阴影 */
-  will-change: transform;
+  /* transform / opacity 由 rAF 弹簧每帧写入，不能再挂 CSS transition（会产生滞后与抖动） */
+  will-change: transform, opacity;
   transform: translateZ(0);
-  transition: opacity .45s ease, transform .45s ease;
 }
-.folder-root[data-open] { opacity: .35; transform: translateY(26px) scale(.92); }
-.folder-stage { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 16%; }
+.folder-stage {
+  position: absolute; inset: 0;
+  perspective: 1400px; perspective-origin: 50% 16%;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
 .folder-layer { position: absolute; top: 0; left: 0; }
 .folder-back { z-index: 4; width: var(--folder-w); height: calc(var(--folder-tab-h) + var(--folder-h)); clip-path: url(#folder-back-clip); }
 .folder-back-fill { position: absolute; inset: 0; background: linear-gradient(180deg, var(--folder-inside-top), var(--folder-inside-bottom)); }
@@ -1386,16 +1390,25 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   display: flex; align-items: center; justify-content: center;
   color: #f0e2c6; font-size: calc(12px * var(--folder-scale)); font-weight: 600; letter-spacing: 4px;
 }
-.folder-cast { position: absolute; left: 3%; width: 94%; height: 16px; bottom: -12px; border-radius: 50%; background: rgba(0,0,0,.38); filter: blur(9px); z-index: 1; }
+.folder-cast {
+  position: absolute; left: 3%; width: 94%; height: 16px; bottom: -12px; border-radius: 50%;
+  background: rgba(0,0,0,.38); filter: blur(9px); z-index: 1;
+  will-change: transform, opacity;
+}
 .folder-front {
   z-index: 40; position: absolute; top: 93.5px; left: 0; width: var(--folder-w); height: 154px;
   transform-origin: top center;
   will-change: transform;
   backface-visibility: hidden;
-  transition: transform .6s cubic-bezier(.22,1,.36,1);
 }
-.folder-root[data-open] .folder-front { transform: rotateX(-66deg); }
 .folder-face { position: absolute; inset: 0; border-radius: var(--folder-front-radius); overflow: hidden; }
+/* 翻盖角度驱动的动态高光 / 暗角：只叠加明暗，不改变任何配色或文字 */
+.folder-face::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background:
+    linear-gradient(rgba(255,255,255,var(--folder-glint,0)), rgba(255,255,255,var(--folder-glint,0))),
+    rgba(0,0,0,var(--folder-dim,0));
+}
 .folder-face-outer {
   background: linear-gradient(160deg, var(--folder-front-top) 0%, var(--folder-base) 48%, var(--folder-front-bottom) 100%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.06);
@@ -1422,10 +1435,17 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   position: relative; width: var(--tt-w); height: var(--tt-h);
   color: var(--tt-ink);
   user-select: none; -webkit-user-select: none;
-  transform: scale(.35);
-  transition: transform .7s cubic-bezier(.22,1,.36,1);
+  /* 从文件夹口「抽出」：小尺寸 + 下方位移 + 轻微歪斜；两张票错峰浮出（spread 相位） */
+  opacity: 0;
+  transform: translateY(74px) scale(.4);
+  transition: transform .84s cubic-bezier(.16,1.12,.3,1), opacity .48s ease;
+  will-change: transform, opacity;
 }
-.tt-pop.show .tt { transform: scale(1); }
+.tt-pop .tt:nth-child(1) { transform: translateY(74px) scale(.4) rotate(-6deg); }
+.tt-pop .tt:nth-child(2) { transform: translateY(88px) scale(.4) rotate(6deg); transition-delay: .13s; }
+.tt-pop.show .tt,
+.tt-pop.show .tt:nth-child(1),
+.tt-pop.show .tt:nth-child(2) { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
 .tt__stage { position: absolute; inset: 0; }
 .tt__plane {
   position: absolute; inset: 0;
@@ -1482,7 +1502,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 }
 .tt__fibres { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .tt__fibres path { fill: none; stroke: var(--tt-bg); stroke-linecap: round; opacity: 0; }
-/* 撕票放大层：以「乐器图实际矩形」为起点做 FLIP 放大，全程不变形 */
+/* 撕票放大层：以「画芯实际矩形」为起点做 FLIP 推镜，全程不变形 */
 .tt-zoom {
   position: fixed; z-index: 1700; pointer-events: none;
   overflow: hidden;
@@ -1490,9 +1510,19 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   opacity: 1;
   will-change: transform, opacity;
   backface-visibility: hidden;
+  contain: paint;
 }
-.tt-zoom img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.tt-zoom__flipper { position: absolute; inset: 0; overflow: hidden; }
+.tt-zoom__flipper img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+/* 全屏清晰层：放大尾声交叉接手，避免把画芯小图插值放大 4~6 倍后发糊 */
+.tt-zoom-sharp {
+  position: fixed; inset: 0; z-index: 1701;
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  pointer-events: none; opacity: 0;
+  will-change: opacity, filter;
+}
 .tt-zoom.fade { opacity: 0 !important; transition: opacity 680ms ease; }
+.tt-zoom-sharp.fade { opacity: 0 !important; transition: opacity 680ms ease; }
 
 /* ===== 场景切换：墨迹扩散遮罩（画卷 ↔ 乐器详情） ===== */
 .nav-veil {
@@ -1723,7 +1753,7 @@ button { -webkit-tap-highlight-color: transparent; }
       <div class="folder-tab-text">观乐指引</div>
     </div>
     <div class="folder-cast" aria-hidden="true"></div>
-    <div class="folder-layer folder-front">
+    <div class="folder-layer folder-front" id="folderFront">
       <div class="folder-face folder-face-outer"></div>
     </div>
   </div>
@@ -2516,23 +2546,78 @@ function zoomable(stage, contentEl, contain, minScale) {
   }
   compute();
   const apply = () => { contentEl.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + s + ")"; };
-  const clamp = () => {
-    const W = baseW * s, H = baseH * s;
-    tx = Math.max((W > viewW ? viewW - W : 0), Math.min((W > viewW ? 0 : (viewW - W) / 2), tx));
-    ty = Math.max((H > viewH ? viewH - H : 0), Math.min((H > viewH ? 0 : (viewH - H) / 2), ty));
+  /* 边界夹取可作用于任意一组 (scale,x,y)：先夹「目标」再缓动，避免 tween 撞边界永远不收敛 */
+  const clampVals = (sc, x, y) => {
+    const W = baseW * sc, H = baseH * sc;
+    return {
+      x: Math.max((W > viewW ? viewW - W : 0), Math.min((W > viewW ? 0 : (viewW - W) / 2), x)),
+      y: Math.max((H > viewH ? viewH - H : 0), Math.min((H > viewH ? 0 : (viewH - H) / 2), y))
+    };
   };
+  const clamp = () => { const c = clampVals(s, tx, ty); tx = c.x; ty = c.y; };
+
+  /* 平滑缩放：按钮 / 滚轮 / 双击只更新目标，rAF 指数趋近；连续输入不排队、不跳帧 */
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let goalS = 1, goalTX = 0, goalTY = 0, tweenRaf = 0, tweenLast = 0;
+  let flingRaf = 0, flingLast = 0, flingVX = 0, flingVY = 0;
+  function stopAnim() {
+    if (tweenRaf) { cancelAnimationFrame(tweenRaf); tweenRaf = 0; }
+    if (flingRaf) { cancelAnimationFrame(flingRaf); flingRaf = 0; }
+    tweenLast = 0; flingLast = 0; flingVX = 0; flingVY = 0;
+  }
+  function syncGoal() { goalS = s; goalTX = tx; goalTY = ty; }
+  function tweenStep(now) {
+    tweenRaf = 0;
+    const dt = tweenLast ? Math.min(0.05, (now - tweenLast) / 1000) : 1 / 60;
+    tweenLast = now;
+    const a = 1 - Math.exp(-dt / 0.07);
+    s += (goalS - s) * a;
+    tx += (goalTX - tx) * a;
+    ty += (goalTY - ty) * a;
+    clamp(); apply();
+    if (Math.abs(goalS - s) > 0.0008 || Math.abs(goalTX - tx) > 0.15 || Math.abs(goalTY - ty) > 0.15) {
+      tweenRaf = requestAnimationFrame(tweenStep);
+    } else { s = goalS; tx = goalTX; ty = goalTY; clamp(); apply(); tweenLast = 0; }
+  }
+  function wakeTween() {
+    if (flingRaf) { cancelAnimationFrame(flingRaf); flingRaf = 0; flingLast = 0; flingVX = 0; flingVY = 0; }
+    if (reduced) { s = goalS; tx = goalTX; ty = goalTY; clamp(); apply(); return; }
+    if (!tweenRaf) { tweenLast = 0; tweenRaf = requestAnimationFrame(tweenStep); }
+  }
+  function flingStep(now) {
+    flingRaf = 0;
+    const dt = flingLast ? Math.min(0.032, (now - flingLast) / 1000) : 1 / 60;
+    flingLast = now;
+    tx += flingVX * dt; ty += flingVY * dt;
+    clamp(); apply(); syncGoal();
+    const decay = Math.exp(-dt / 0.16);
+    flingVX *= decay; flingVY *= decay;
+    if (Math.abs(flingVX) > 8 || Math.abs(flingVY) > 8) flingRaf = requestAnimationFrame(flingStep);
+    else flingLast = 0;
+  }
+
   const fit = () => {
-    compute();
+    stopAnim(); compute();
     s = 1;
     tx = (baseW > viewW ? 0 : (viewW - baseW) / 2);
     ty = (baseH > viewH ? 0 : (viewH - baseH) / 2);
-    clamp(); apply();
+    clamp(); apply(); syncGoal();
   };
   const zoomAt = (f, cx, cy) => {
+    const ns = Math.max(minScale, Math.min(8, goalS * f));
+    const c = clampVals(ns,
+      cx - (cx - goalTX) * (ns / goalS),
+      cy - (cy - goalTY) * (ns / goalS));
+    goalS = ns; goalTX = c.x; goalTY = c.y;
+    wakeTween();
+  };
+  /* 双指手势走即时通道，避免缓动带来的跟手延迟 */
+  const zoomNow = (f, cx, cy) => {
+    stopAnim();
     const ns = Math.max(minScale, Math.min(8, s * f));
     tx = cx - (cx - tx) * (ns / s);
     ty = cy - (cy - ty) * (ns / s);
-    s = ns; clamp(); apply();
+    s = ns; clamp(); apply(); syncGoal();
   };
   const rect = () => stage.getBoundingClientRect();
 
@@ -2547,12 +2632,16 @@ function zoomable(stage, contentEl, contain, minScale) {
   const pointers = {};
   let lastDist = 0, dragging = false;
   let startX = 0, startY = 0, startTX = 0, startTY = 0;
+  let lastPX = 0, lastPY = 0, lastPT = 0, moveVX = 0, moveVY = 0;
 
   stage.addEventListener("pointerdown", (e) => {
+    stopAnim();
     pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
     if (Object.keys(pointers).length === 1) {
       dragging = true; suppressClick = false;
       startX = e.clientX; startY = e.clientY; startTX = tx; startTY = ty;
+      lastPX = e.clientX; lastPY = e.clientY; lastPT = performance.now();
+      moveVX = 0; moveVY = 0;
     }
     lastDist = 0;
   });
@@ -2565,19 +2654,35 @@ function zoomable(stage, contentEl, contain, minScale) {
       const d = Math.hypot(p1.x - p0.x, p1.y - p0.y);
       const mx = (p0.x + p1.x) / 2, my = (p0.y + p1.y) / 2;
       const r = rect();
-      if (lastDist > 0) zoomAt(d / lastDist, mx - r.left, my - r.top);
+      if (lastDist > 0) zoomNow(d / lastDist, mx - r.left, my - r.top);
       lastDist = d;
       dragging = false;
     } else if (dragging) {
+      const now = performance.now();
+      const dt = Math.max(0.008, (now - lastPT) / 1000);
+      moveVX = moveVX * 0.6 + ((e.clientX - lastPX) / dt) * 0.4;
+      moveVY = moveVY * 0.6 + ((e.clientY - lastPY) / dt) * 0.4;
+      lastPX = e.clientX; lastPY = e.clientY; lastPT = now;
       const dx = e.clientX - startX, dy = e.clientY - startY;
       if (Math.abs(dx) + Math.abs(dy) > 3) suppressClick = true;
-      tx = startTX + dx; ty = startTY + dy; clamp(); apply();
+      tx = startTX + dx; ty = startTY + dy; clamp(); apply(); syncGoal();
     }
   });
   const up = (e) => {
     delete pointers[e.pointerId];
-    if (Object.keys(pointers).length < 2) lastDist = 0;
-    if (Object.keys(pointers).length === 0) dragging = false;
+    const n = Object.keys(pointers).length;
+    if (n < 2) lastDist = 0;
+    if (n === 0 && dragging) {
+      dragging = false;
+      /* 甩动惯性：仅在放大状态下、且松手前仍有速度时启用 */
+      if (!reduced && s > 1.02 && performance.now() - lastPT < 90) {
+        flingVX = Math.max(-2200, Math.min(2200, moveVX));
+        flingVY = Math.max(-2200, Math.min(2200, moveVY));
+        if (Math.abs(flingVX) > 60 || Math.abs(flingVY) > 60) {
+          flingLast = 0; if (!flingRaf) flingRaf = requestAnimationFrame(flingStep);
+        }
+      }
+    }
   };
   stage.addEventListener("pointerup", up);
   stage.addEventListener("pointercancel", up);
@@ -2585,6 +2690,12 @@ function zoomable(stage, contentEl, contain, minScale) {
   stage.addEventListener("click", (e) => {
     if (suppressClick) { e.preventDefault(); e.stopPropagation(); suppressClick = false; }
   }, true);
+  /* 双击：在 1× 与 2.2× 之间以指针位置为锚点平滑切换 */
+  stage.addEventListener("dblclick", (e) => {
+    e.preventDefault();
+    const r = rect();
+    zoomAt(goalS > 1.6 ? 1 / goalS : 2.2 / goalS, e.clientX - r.left, e.clientY - r.top);
+  });
 
   if (img && !img.complete) {
     img.addEventListener("load", () => { fit(); }, { once: true });
@@ -2940,6 +3051,162 @@ document.addEventListener("click", (e) => {
 
 route();
 
+/* ============ 文件夹：Folder 组件弹簧物理（flap · solid） ============
+   相位 rest / peek / open；翻盖角度、指针 3D 倾斜、悬停抬升、按压回弹、
+   打开后下沉淡出、入场「先开后合」，全部跑在同一个 rAF 半隐式欧拉积分器上。
+   bounce = 0.4 → zeta = 0.712（欠阻尼，落位带一次轻微回弹）。
+   仅改运动，不改颜色 / 文字 / 图片。 */
+(function folderEngine() {
+  const root = document.getElementById('folderRoot');
+  if (!root) return;
+  const stage = root.querySelector('.folder-stage');
+  const front = document.getElementById('folderFront');
+  const cast = root.querySelector('.folder-cast');
+  if (!stage || !front) return;
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2, STEP = 1 / 240;
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const spring = v => ({ value: v, velocity: 0 });
+  const ANGLE = { rest: 0, peek: -15, open: -64, intro: -30 };
+  const BOUNCE = 0.4, TILT = 0.5;
+
+  const S = {
+    raf: 0, last: 0, hovered: false, pressed: false, opened: false,
+    px: 0, py: 0, introDone: false, introT0: 0,
+    front: spring(reduce ? ANGLE.rest : ANGLE.intro),
+    rx: spring(0), ry: spring(0), lift: spring(0),
+    squash: spring(1), anchor: spring(0), appear: spring(reduce ? 1 : 0)
+  };
+
+  /* 240Hz 子步积分：高帧率与大 dt 下都稳定，不会像 CSS 缓动那样跳帧 */
+  function integrate(item, target, omega, zeta, dt) {
+    const k = omega * omega, d = 2 * zeta * omega;
+    const steps = Math.max(1, Math.ceil(dt / STEP)), step = dt / steps;
+    for (let i = 0; i < steps; i++) {
+      item.velocity += (k * (target - item.value) - d * item.velocity) * step;
+      item.value += item.velocity * step;
+    }
+    return Math.abs(target - item.value) > 0.01 || Math.abs(item.velocity) > 0.01;
+  }
+  function snap(item, v) { item.value = v; item.velocity = 0; }
+  function phase() {
+    if (S.opened) return 'open';
+    if (S.hovered && !reduce) return 'peek';
+    return 'rest';
+  }
+
+  function write() {
+    const zoom = (1 + S.lift.value * 0.012) * S.squash.value * (0.94 + 0.06 * S.appear.value);
+    /* perspective() 写在 transform 里只作用于 stage 自身姿态；CSS perspective 属性仍作用于子层前盖 */
+    stage.style.transform = 'perspective(1400px) rotateX(' + S.rx.value.toFixed(3) + 'deg) rotateY('
+      + S.ry.value.toFixed(3) + 'deg) scale(' + zoom.toFixed(4) + ')';
+    front.style.transform = 'rotateX(' + S.front.value.toFixed(3) + 'deg)';
+
+    /* 翻盖法向决定迎光量：掀开时逐渐转暗，越过水平面时给一点高光 */
+    const a = S.front.value * Math.PI / 180;
+    const facing = Math.sin(a) * 0.5 + Math.cos(a) * 0.86;
+    const light = facing / 0.86;
+    front.style.setProperty('--folder-glint', clamp((light - 1) * 0.9, 0, 0.16).toFixed(3));
+    front.style.setProperty('--folder-dim', clamp((1 - light) * 0.22, 0, 0.45).toFixed(3));
+
+    /* 打开后文件夹整体下沉淡出（原 CSS 的 .35 / 26px / .92 改由弹簧连续驱动） */
+    const anchor = clamp(S.anchor.value, 0, 1);
+    root.style.opacity = ((1 - 0.65 * anchor) * clamp(S.appear.value, 0, 1)).toFixed(3);
+    root.style.transform = 'translateY(' + (26 * anchor).toFixed(2) + 'px) scale('
+      + (1 - 0.08 * anchor).toFixed(4) + ')';
+    if (cast) {
+      cast.style.opacity = (0.75 + S.lift.value * 0.25).toFixed(3);
+      cast.style.transform = 'translateY(' + (-S.lift.value * 2).toFixed(2) + 'px) scale('
+        + (1 + S.lift.value * 0.06).toFixed(3) + ')';
+    }
+  }
+
+  function frame(now) {
+    S.raf = 0;
+    const dt = S.last ? Math.min(0.05, (now - S.last) / 1000) : 1 / 60;
+    S.last = now;
+
+    /* 帷幕（loader）尚未落幕时保持入场初始姿态，避免动画在不可见时白跑 */
+    if (!S.introDone && !reduce && document.getElementById('loader')) {
+      write();
+      S.raf = requestAnimationFrame(frame);
+      return;
+    }
+
+    const zeta = reduce ? 1 : 1 - 0.72 * BOUNCE;
+    const frontOmega = TAU * 2, softOmega = TAU * 1.6;
+    let busy = false;
+
+    /* intro：先掀开 0.34s，再弹回 rest/peek，同时淡入 */
+    let target = ANGLE[phase()];
+    if (!S.introDone && !reduce) {
+      if (!S.introT0) S.introT0 = now;
+      const t = (now - S.introT0) / 1000;
+      if (t < 0.34) target = ANGLE.intro;
+      if (t > 0.92) S.introDone = true;
+      busy = true;
+    } else S.introDone = true;
+
+    busy = integrate(S.front, target, frontOmega, zeta, dt) || busy;
+    busy = integrate(S.appear, 1, TAU * 1.2, 1, dt) || busy;
+    busy = integrate(S.anchor, S.opened ? 1 : 0, frontOmega, 1, dt) || busy;
+
+    const engaged = S.hovered && !S.opened && !reduce;
+    busy = integrate(S.rx, engaged ? -S.py * 8 * TILT : 0, softOmega, 1, dt) || busy;
+    busy = integrate(S.ry, engaged ? S.px * 10 * TILT : 0, softOmega, 1, dt) || busy;
+    busy = integrate(S.lift, engaged ? 1 : 0, softOmega, 1, dt) || busy;
+    busy = integrate(S.squash, S.pressed ? 0.975 : 1, TAU * 3.2, 0.6, dt) || busy;
+
+    write();
+    if (busy) S.raf = requestAnimationFrame(frame);
+    else S.last = 0;
+  }
+  function wake() { if (!S.raf) S.raf = requestAnimationFrame(frame); }
+
+  function open() {
+    if (S.opened) return;
+    S.opened = true;
+    S.hovered = false;
+    S.introDone = true;
+    root.setAttribute('data-open', '');
+    stage.setAttribute('aria-expanded', 'true');
+    wake();
+    /* 翻盖掀到一半时，两张票根从袋中错峰抽出 */
+    setTimeout(function () {
+      const pop = document.getElementById('ttPop');
+      if (pop) pop.classList.add('show');
+      window.dispatchEvent(new Event('folder:open'));
+    }, 300);
+  }
+
+  stage.addEventListener('pointermove', function (e) {
+    if (e.pointerType === 'touch' || S.opened) return;
+    const r = root.getBoundingClientRect();
+    if (!r.width) return;
+    S.px = clamp((e.clientX - (r.left + r.width / 2)) / (r.width / 2), -1, 1);
+    S.py = clamp((e.clientY - (r.top + r.height / 2)) / (r.height / 2), -1, 1);
+    if (!S.hovered) { S.hovered = true; S.introDone = true; }
+    wake();
+  }, { passive: true });
+  stage.addEventListener('pointerleave', function () {
+    if (S.opened) return;
+    S.hovered = false; S.px = 0; S.py = 0;
+    wake();
+  });
+  stage.addEventListener('pointerdown', function () { S.pressed = true; S.introDone = true; wake(); });
+  window.addEventListener('pointerup', function () {
+    if (S.pressed) { S.pressed = false; wake(); }
+  });
+  stage.addEventListener('click', open);
+  stage.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+  });
+
+  write();
+  wake();
+})();
+
 /* ============ 文件夹 + 双票根（合乐图 / 宫乐图）撕票交互 ============
    撕裂物理：拉伸出纤维 → 逐根崩断并回缩 → 三点悬挂 → 抛落淡出
    另加：纯点击自动撕下、指针 3D 倾斜与图面视差。整套状态跑在 rAF 上，不再依赖 CSS 过渡 */
@@ -2947,7 +3214,6 @@ route();
   const folder = document.getElementById('folderRoot');
   const ttPop = document.getElementById('ttPop');
   if (!folder || !ttPop) return;
-  const fstage = folder.querySelector('.folder-stage');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -3341,19 +3607,28 @@ route();
       const r = art.getBoundingClientRect();
       const vw = document.documentElement.clientWidth || window.innerWidth;
       const vh = document.documentElement.clientHeight || window.innerHeight;
+
+      /* 前景 FLIP 层：严格以画芯矩形为起点，object-fit 与票根一致，起飞瞬间无缝 */
       const zoom = document.createElement('div');
       zoom.className = 'tt-zoom';
+      const flipper = document.createElement('div');
+      flipper.className = 'tt-zoom__flipper';
       const zimg = document.createElement('img');
       zimg.src = scene.img; zimg.alt = scene.ticketAlt; zimg.draggable = false;
-      zoom.appendChild(zimg);
+      flipper.appendChild(zimg); zoom.appendChild(flipper);
       zoom.style.left = r.left + 'px';
       zoom.style.top = r.top + 'px';
       zoom.style.width = r.width + 'px';
       zoom.style.height = r.height + 'px';
       zoom.style.borderRadius = '8px';
+      /* 全屏清晰层：与 FLIP 终点同图同裁切，放大尾声交叉淡入接手 */
+      const sharp = document.createElement('img');
+      sharp.className = 'tt-zoom-sharp';
+      sharp.src = scene.img; sharp.alt = ''; sharp.draggable = false;
       document.body.appendChild(zoom);
+      document.body.appendChild(sharp);
 
-      const k = Math.max(vw / r.width, vh / r.height);
+      const k = r.width && r.height ? Math.max(vw / r.width, vh / r.height) : 1;
       const tx = vw / 2 - (r.left + r.width / 2);
       const ty = vh / 2 - (r.top + r.height / 2);
 
@@ -3363,20 +3638,32 @@ route();
         setTimeout(function () { if (welcome.parentNode) welcome.parentNode.removeChild(welcome); }, 760);
       }
 
+      let revealed = false;
       const fadeZoom = function () {
+        if (!revealed) { revealed = true; revealIntro(); }
         zoom.classList.add('fade');
-        setTimeout(function () { if (zoom.parentNode) zoom.parentNode.removeChild(zoom); }, 740);
+        sharp.classList.add('fade');
+        setTimeout(function () {
+          if (zoom.parentNode) zoom.parentNode.removeChild(zoom);
+          if (sharp.parentNode) sharp.parentNode.removeChild(sharp);
+        }, 740);
       };
       if (typeof gsap !== 'undefined' && !reduceMotion) {
-        gsap.to(zoom, {
-          x: tx, y: ty, scale: k, borderRadius: 0,
-          duration: 1.06, ease: 'power3.inOut', onComplete: fadeZoom
-        });
+        gsap.set(sharp, { opacity: 0, filter: 'brightness(.88) blur(3px)' });
+        const tl = gsap.timeline({ onComplete: fadeZoom });
+        /* 段一：起势推镜，圆角收平 */
+        tl.to(zoom, {
+          x: tx * 0.93, y: ty * 0.93, scale: k * 0.93, borderRadius: 0,
+          duration: 0.62, ease: 'power2.inOut'
+        }, 0)
+        /* 段二：轻微过冲落定，同时清晰层交叉接手 → 终点是原生分辨率而非插值放大 */
+          .to(zoom, { x: tx, y: ty, scale: k * 1.035, duration: 0.58, ease: 'power2.out' }, 0.62)
+          .to(sharp, { opacity: 1, filter: 'brightness(1) blur(0px)', duration: 0.52, ease: 'power2.out' }, 0.66);
       } else {
         zoom.style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) scale(' + k.toFixed(2) + ')';
+        sharp.style.opacity = '1';
         setTimeout(fadeZoom, 420);
       }
-      setTimeout(revealIntro, 560);
     }
 
     function revealIntro() {
@@ -3404,17 +3691,7 @@ route();
   // 两张票根并排供选择：合乐图 / 宫乐图
   [SCENES.hele, SCENES.gongle].forEach(function (sc) { ttPop.appendChild(buildTicket(sc)); });
 
-  let opened = false;
-  function openFolder() {
-    if (opened) return;
-    opened = true;
-    folder.setAttribute('data-open', '');
-    setTimeout(function () { ttPop.classList.add('show'); }, 280);
-  }
-  fstage.addEventListener('click', openFolder);
-  fstage.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFolder(); }
-  });
+  /* 票根显隐由文件夹弹簧引擎在翻盖掀到一半时触发（folder:open / ttPop.show） */
 })();
 
 // 初始化默认场景（合乐图）：重渲热点/索引并配置开始界面背景
