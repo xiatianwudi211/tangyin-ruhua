@@ -230,8 +230,9 @@ a { color: var(--qing-deep); text-decoration: none; }
   position: relative;
   height: 100%;
   box-shadow: inset 0 18px 36px rgba(0,0,0,0.28), inset 0 -18px 36px rgba(0,0,0,0.28);
-  /* 画卷卷起/展开转场：两轴合拢成中线 → 换画 → 展开 */
-  transition: clip-path .6s cubic-bezier(.65, 0, .35, 1);
+  /* 画卷卷起/展开转场：两轴合拢成中线 → 换画 → 展开
+     合拢缓入、展开缓出，收起有重量、展开有余韵 */
+  transition: clip-path .62s cubic-bezier(.16,1,.3,1);
   will-change: clip-path;
 }
 /* LQIP 模糊占位：大图未就绪时先铺底，切换画卷时同样生效 */
@@ -252,7 +253,10 @@ a { color: var(--qing-deep); text-decoration: none; }
 .painting-wrapper.img-loading .painting-ph { opacity: 1; }
 @keyframes paintingShimmer { from { background-position: 120% 0; } to { background-position: -80% 0; } }
 /* 卷起状态：左右各裁 50%，只剩中间一条线 */
-.painting-wrapper.is-rolling { clip-path: inset(0 50% 0 50%); }
+.painting-wrapper.is-rolling {
+  clip-path: inset(0 50% 0 50%);
+  transition-timing-function: cubic-bezier(.5,.02,.72,.35);
+}
 /* 卷起时两端木轴合拢到中线，形成一根立轴高光 */
 .painting-wrapper.is-rolling::before,
 .painting-wrapper.is-rolling::after {
@@ -340,6 +344,12 @@ a { color: var(--qing-deep); text-decoration: none; }
   background: #b98c3e;
   border-color: #b98c3e;
 }
+.scroll-switch button {
+  transition: background-color .28s ease, color .28s ease, border-color .28s ease, transform .28s cubic-bezier(.22,1,.36,1);
+}
+.scroll-switch button:hover:not(.active) { background: #fbf6ea; transform: translateY(-1px); }
+/* 换画过程中锁住切换按钮，避免连点打断卷轴 */
+body.scene-switching .scroll-switch button { pointer-events: none; opacity: .55; }
 /* 中 / EN 语言切换：最简单的普通按钮，无动效 */
 .lang-toggle {
   position: fixed;
@@ -1417,14 +1427,20 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 }
 .tt-pop.show .tt { transform: scale(1); }
 .tt__stage { position: absolute; inset: 0; }
-.tt__plane { position: absolute; inset: 0; transform: perspective(1000px) rotate(4deg); }
-.tt__piece { position: absolute; inset: 0; pointer-events: none; }
-.tt__piece--stub { outline: none; will-change: transform; }
+.tt__plane {
+  position: absolute; inset: 0;
+  transform: perspective(1000px) rotate(4deg);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.tt__piece { position: absolute; inset: 0; pointer-events: none; backface-visibility: hidden; }
+.tt__piece--stub { outline: none; will-change: transform, opacity; }
 .tt__edge { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .tt__edge path { fill: none; stroke: var(--tt-edge); stroke-width: var(--tt-edge-w); }
 .tt__paper { position: absolute; inset: 0; background: var(--tt-bg); pointer-events: auto; }
 .tt__paper--stub { background: var(--tt-stub-bg); cursor: grab; touch-action: none; }
-.tt__paper--stub:active { cursor: grabbing; }
+.tt[data-grabbing] .tt__paper--stub { cursor: grabbing; }
+.tt[data-torn] .tt__paper--stub { cursor: default; }
 .tt__art {
   position: absolute; top: var(--tt-inset); left: var(--tt-inset);
   width: calc(var(--tt-body-w) - var(--tt-inset) * 2);
@@ -1436,6 +1452,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   width: calc(100% + var(--tt-parallax) * 2); max-width: none;
   height: calc(100% + var(--tt-parallax) * 2);
   object-fit: cover; -webkit-user-drag: none;
+  will-change: transform;
 }
 .tt__scrim {
   position: absolute; inset: 0;
@@ -1448,6 +1465,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   width: calc(var(--tt-w) - var(--tt-stub));
   display: flex; align-items: flex-end;
   padding: 0 18px 14px;
+  will-change: transform;
 }
 .tt__name { font-size: 18px; letter-spacing: 6px; color: #f0e2c6; font-weight: 600; text-shadow: 0 2px 10px rgba(0,0,0,.7); }
 .tt__stub {
@@ -1464,17 +1482,34 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 }
 .tt__fibres { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .tt__fibres path { fill: none; stroke: var(--tt-bg); stroke-linecap: round; opacity: 0; }
-/* 撕票放大层：从票根位置丝滑放大到全屏 */
+/* 撕票放大层：以「乐器图实际矩形」为起点做 FLIP 放大，全程不变形 */
 .tt-zoom {
-  position: fixed; left: 0; top: 0; z-index: 1700; pointer-events: none;
-  width: 100vw; height: 100vh; overflow: hidden;
-  transform-origin: center;
-  opacity: 0;
+  position: fixed; z-index: 1700; pointer-events: none;
+  overflow: hidden;
+  transform-origin: center center;
+  opacity: 1;
   will-change: transform, opacity;
-  transition: transform 1000ms cubic-bezier(.16,1,.3,1), opacity 300ms ease;
+  backface-visibility: hidden;
 }
 .tt-zoom img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-.tt-zoom.fade { opacity: 0; transition: opacity 620ms ease; }
+.tt-zoom.fade { opacity: 0 !important; transition: opacity 680ms ease; }
+
+/* ===== 场景切换：墨迹扩散遮罩（画卷 ↔ 乐器详情） ===== */
+.nav-veil {
+  position: fixed; inset: 0; z-index: 3900;
+  pointer-events: none; overflow: hidden;
+  visibility: hidden;
+}
+.nav-veil__ink {
+  position: absolute;
+  width: 100vmax; height: 100vmax;
+  margin-left: -50vmax; margin-top: -50vmax;
+  border-radius: 50%;
+  background: #15110c;
+  box-shadow: 0 0 0 1px rgba(232,200,122,.06);
+  transform: scale(0);
+  will-change: transform;
+}
 
 /* ===== 详情进入视口：上移 24px + 淡入，0.6s ease-out，仅一次 ===== */
 .detail-wrap.detail-enter {
@@ -1760,7 +1795,9 @@ function __loadImg(img, holder, lqipKey, onReady) {
   if (!img) return Promise.resolve(false);
   const LQ = window.__LQIP || {};
   const base = img.getAttribute('src') || '';
-  if (holder) {
+  // 已就绪的图（如换画前已预载）不再回到占位态，避免换画瞬间闪白
+  const instant = !!(img.complete && img.naturalWidth > 0);
+  if (holder && !instant) {
     if (lqipKey && LQ[lqipKey]) holder.style.backgroundImage = 'url("' + LQ[lqipKey] + '")';
     holder.classList.remove('img-ready');
     holder.classList.add('img-loading');
@@ -1788,7 +1825,7 @@ function __loadImg(img, holder, lqipKey, onReady) {
       holder.classList.remove('img-loading');
       holder.classList.add('img-ready');
       // 占位底图用完即清：乐器图为透明 PNG/WebP，残留 LQIP 会透出来
-      holder.style.backgroundImage = '';
+      if (!instant) holder.style.backgroundImage = '';
     }
     if (ok && typeof onReady === 'function') { try { onReady(); } catch (e) {} }
     return ok;
@@ -1851,10 +1888,27 @@ function __loadImg(img, holder, lqipKey, onReady) {
     light.style.setProperty('--ly', y + '%');
   });
 
+  let leaving = false;
   startBtn.addEventListener('click', () => {
-    intro.classList.add('hidden');
+    if (leaving) return;
+    leaving = true;
+    intro.style.pointerEvents = 'none';
     if (window.__resetScroll) window.__resetScroll();
-    setTimeout(() => intro.remove(), 1400);
+    const vp = document.getElementById('scrollViewport');
+    if (typeof gsap !== 'undefined' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      // 步入展厅：开始界面轻微推近、虚化淡出；画卷自 1.06 缓落到 1，两者交叉
+      gsap.to(intro, {
+        autoAlpha: 0, scale: 1.045, filter: 'blur(10px)',
+        duration: 1.05, ease: 'power2.inOut',
+        onComplete: () => { if (intro.parentNode) intro.parentNode.removeChild(intro); }
+      });
+      if (vp) gsap.fromTo(vp,
+        { scale: 1.06, autoAlpha: 0.15 },
+        { scale: 1, autoAlpha: 1, duration: 1.35, ease: 'power3.out', clearProps: 'transform,opacity,visibility' });
+    } else {
+      intro.classList.add('hidden');
+      setTimeout(() => { if (intro.parentNode) intro.parentNode.removeChild(intro); }, 1400);
+    }
   });
 })();
 
@@ -2305,37 +2359,67 @@ function applyLanguage() {
 
 /* ============ 画卷间卷起/展开转场 ============ */
 let isSwitching = false;
+const __preloadCache = new Map();
+function __preloadImage(src) {
+  if (!src) return Promise.resolve(null);
+  let p = __preloadCache.get(src);
+  if (!p) {
+    p = new Promise(resolve => {
+      const im = new Image();
+      im.decoding = 'async';
+      im.onload = () => (im.decode ? im.decode().then(() => resolve(im)).catch(() => resolve(im)) : resolve(im));
+      im.onerror = () => resolve(null);
+      im.src = src;
+      setTimeout(() => resolve(null), 8000);   // 兜底：任何情况下都不让画卷卡在半卷
+    });
+    __preloadCache.set(src, p);
+  }
+  return p;
+}
+function prefersReduced() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
 function switchSceneWithRoll(targetKey) {
   if (isSwitching || targetKey === sceneKey) return;
+  const sc = SCENES[targetKey];
+  if (!sc) return;
   isSwitching = true;
   const painting = document.getElementById('painting');
+  const pimg = document.getElementById('paintingImg');
   if (!painting) { activateScene(targetKey); updateSwitchUI(); isSwitching = false; return; }
-  painting.classList.add('is-rolling');
+
+  const reduce = prefersReduced();
+  const closedMs = reduce ? 0 : 640;   // 卷合（缓入，收得有重量）
+  const holdMs = reduce ? 0 : 90;      // 合拢后停顿一瞬再换画
+  const openedMs = reduce ? 0 : 760;   // 展开（缓出，余韵更长）
+
+  // 预载目标画卷：卷到中线时基本已解码完成，展开即是清晰的画，不出现占位闪动
+  const ready = __preloadImage(sc.scrollImg);
+
+  if (!reduce) painting.classList.add('is-rolling');
+  document.body.classList.add('scene-switching');
+
   setTimeout(() => {
-    activateScene(targetKey);
-    if (window.__recalcScroll) window.__recalcScroll();
-    const pimg = document.getElementById('paintingImg');
-    const done = () => {
+    ready.then(() => {
+      activateScene(targetKey);          // 此刻画卷已合拢，换图不可见
       if (window.__recalcScroll) window.__recalcScroll();
-      painting.classList.remove('is-rolling');
-      updateSwitchUI();
-      // FadeContent mist 雾中浮现：新画卷自模糊/上移淡入，与卷轴展开重叠衔接
-      if (typeof gsap !== 'undefined') {
-        gsap.fromTo(painting,
-          { autoAlpha: 0, filter: 'blur(10px)', y: 14 },
-          { autoAlpha: 1, filter: 'blur(0px)', y: 0, duration: 1.6, ease: 'power2.out', delay: 0.05, clearProps: 'filter,transform', overwrite: true });
-      }
-      setTimeout(() => { isSwitching = false; }, 80);
-    };
-    // 卷轴展开不等死图：加载/失败/8 秒超时三保险，任何一条先到都继续，交互永不卡死
-    if (pimg && !pimg.complete) {
-      let settled = false;
-      const once = () => { if (settled) return; settled = true; done(); };
-      pimg.addEventListener('load', once, { once: true });
-      pimg.addEventListener('error', once, { once: true });
-      setTimeout(once, 8000);
-    } else done();
-  }, 620);
+      setTimeout(() => {
+        painting.classList.remove('is-rolling');
+        updateSwitchUI();
+        if (typeof gsap !== 'undefined' && !reduce && pimg) {
+          // 展开时画面自轻微虚化/放大回落，像绢本被缓缓展平
+          gsap.fromTo(pimg,
+            { filter: 'blur(6px)', scale: 1.025 },
+            { filter: 'blur(0px)', scale: 1, duration: 0.95, ease: 'power2.out', clearProps: 'filter,transform', overwrite: true });
+        }
+        setTimeout(() => {
+          isSwitching = false;
+          document.body.classList.remove('scene-switching');
+        }, openedMs);
+      }, holdMs);
+    });
+  }, closedMs);
 }
 function updateSwitchUI() {
   const btns = document.querySelectorAll('.scroll-switch button');
@@ -2665,11 +2749,13 @@ function buildCardHTML(it) {
     + '</article>';
 }
 
-/* 乐器详情：单卡 + 淡入淡出（最初形式，无纵深轮播） */
-function renderDetail(id) {
+/* 乐器详情：单卡 + 淡入淡出（最初形式，无纵深轮播）
+   dir = ±1 时表示乐器间左右切换，入场交给 swapTo 统一处理 */
+function renderDetail(id, dir) {
   const it = byId[id];
   if (!it) { window.location.hash = '#/'; return; }
   const wrap = document.getElementById('detailWrap');
+  const swap = dir === 1 || dir === -1;
   const t = I18N[lang];
   const L = instruments.length;
   const prevIt = instruments[(it.index - 1 + L) % L];
@@ -2687,8 +2773,7 @@ function renderDetail(id) {
     + '<span>' + nextIt.full + '</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></a>'
     + '</nav>';
   wrap.innerHTML = topbar + '<div class="detail-single">' + buildCardHTML(it) + nav + '</div>';
-  const closeBtn = wrap.querySelector('#detailClose');
-  if (closeBtn) closeBtn.addEventListener('click', () => { location.hash = '#/'; });
+  // 退出用场景转场（墨迹），不再硬切
   // 缩放绑定
   const card = wrap.querySelector('.instrument-card');
   const dz = card.querySelector('.detail-zoom');
@@ -2704,10 +2789,77 @@ function renderDetail(id) {
   const dContent = card.querySelector('.detail-content');
   const dImg = card.querySelector('.detail-content img');
   if (dContent && dImg) __loadImg(dImg, dContent, it.id);
-  // 淡入（最初形式）
-  gsap.fromTo(card, { autoAlpha: 0, y: 16, filter: 'blur(8px)' }, { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out', onComplete: () => gsap.set(card, { clearProps: 'filter' }) });
   const navEl = wrap.querySelector('.detail-nav');
-  if (navEl) gsap.fromTo(navEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, delay: 0.15 });
+  if (swap) {
+    // 乐器左右切换：卡片入场由 swapTo 控制，导航条只做极轻的淡入
+    if (navEl) gsap.fromTo(navEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, delay: 0.06 });
+  } else {
+    // 首次进入（从画卷点朱砂）：自下方轻推 + 去虚化淡入
+    gsap.fromTo(card, { autoAlpha: 0, y: 18, filter: 'blur(8px)' }, { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.55, ease: 'power2.out', onComplete: () => gsap.set(card, { clearProps: 'filter' }) });
+    if (navEl) gsap.fromTo(navEl, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.45, delay: 0.16, clearProps: 'transform' });
+  }
+}
+
+/* 乐器间左右切换：旧卡滑出 → 原地换内容 → 新卡自反向滑入（背景与顶栏保持不动） */
+function swapTo(id, dir) {
+  if (!byId[id]) return;
+  const wrap = document.getElementById('detailWrap');
+  const card = wrap && wrap.querySelector('.instrument-card');
+  if (!card || typeof gsap === 'undefined') { location.hash = '#/instrument/' + id; return; }
+  if (wrap.dataset.swapping === '1') return;
+  wrap.dataset.swapping = '1';
+  gsap.killTweensOf(card);
+  gsap.to(card, {
+    autoAlpha: 0, x: dir * 44, scale: 0.985,
+    duration: 0.2, ease: 'power2.in',
+    onComplete: () => {
+      history.replaceState(null, '', '#/instrument/' + id);
+      renderDetail(id, dir);
+      const nc = wrap.querySelector('.instrument-card');
+      if (nc) {
+        gsap.fromTo(nc,
+          { autoAlpha: 0, x: -dir * 44, scale: 0.99 },
+          { autoAlpha: 1, x: 0, scale: 1, duration: 0.4, ease: 'power3.out', clearProps: 'transform' });
+      }
+      wrap.dataset.swapping = '0';
+    }
+  });
+}
+
+/* ============ 场景转场：墨迹自点击处扩散（画卷 ↔ 乐器详情） ============ */
+let __veilBusy = false;
+function inkWipe(x, y, action) {
+  if (prefersReduced() || typeof gsap === 'undefined' || __veilBusy) { action(); return; }
+  __veilBusy = true;
+  let veil = document.getElementById('navVeil');
+  if (!veil) {
+    veil = document.createElement('div');
+    veil.id = 'navVeil';
+    veil.className = 'nav-veil';
+    const ink0 = document.createElement('div');
+    ink0.className = 'nav-veil__ink';
+    veil.appendChild(ink0);
+    document.body.appendChild(veil);
+  }
+  const ink = veil.firstChild;
+  const px = (x === undefined || x === null) ? window.innerWidth / 2 : x;
+  const py = (y === undefined || y === null) ? window.innerHeight / 2 : y;
+  ink.style.left = px + 'px';
+  ink.style.top = py + 'px';
+  veil.style.visibility = 'visible';
+  gsap.killTweensOf([veil, ink]);
+  gsap.set(veil, { opacity: 1 });
+  gsap.fromTo(ink, { scale: 0 }, {
+    scale: 2.2, duration: 0.36, ease: 'power2.in',
+    onComplete: () => {
+      try { action(); } catch (e) {}
+      gsap.to(ink, { scale: 2.5, duration: 0.5, ease: 'power1.out' });
+      gsap.to(veil, {
+        opacity: 0, duration: 0.48, delay: 0.05, ease: 'power2.out',
+        onComplete: () => { veil.style.visibility = 'hidden'; __veilBusy = false; }
+      });
+    }
+  });
 }
 
 /* ============ 路由 ============ */
@@ -2746,8 +2898,28 @@ function route() {
 }
 window.addEventListener("hashchange", route);
 
-/* 热点点击：乐器跳详情；皇帝光标切换宫乐图提示卡 */
+/* 点击：返回画卷 / 乐器左右切换 / 热点进详情，统一走转场 */
 document.addEventListener("click", (e) => {
+  // 返回画卷：墨迹从按钮处收拢
+  const back = e.target.closest(".back-link, #detailClose");
+  if (back) {
+    e.preventDefault();
+    if (location.hash === "#/" || location.hash === "") return;
+    const r = back.getBoundingClientRect();
+    inkWipe(r.left + r.width / 2, r.top + r.height / 2, () => { location.hash = "#/"; });
+    return;
+  }
+
+  // 上一件 / 下一件：原地滑切，不重新进入整个详情视图
+  const navA = e.target.closest(".detail-nav a");
+  if (navA) {
+    e.preventDefault();
+    const mm = (navA.getAttribute("href") || "").match(/#\/instrument\/(\w+)/);
+    if (!mm) return;
+    swapTo(mm[1], navA.classList.contains("next") ? 1 : -1);
+    return;
+  }
+
   const a = e.target.closest(".hotspot");
   if (!a) return;
   if (a.classList.contains("emperor-hotspot")) {
@@ -2759,7 +2931,8 @@ document.addEventListener("click", (e) => {
   const url = a.getAttribute("href");
   if (!url || url === "#") return;
   e.preventDefault();
-  location.hash = url;
+  // 朱砂墨点处晕开：墨迹扩散盖住切换，再自中心化开显露详情
+  inkWipe(e.clientX, e.clientY, () => { location.hash = url; });
 });
 
 /* ============ 开场帷幕 ============ */
@@ -2767,12 +2940,15 @@ document.addEventListener("click", (e) => {
 
 route();
 
-/* ============ 文件夹 + 双票根（合乐图 / 宫乐图）撕票交互 ============ */
+/* ============ 文件夹 + 双票根（合乐图 / 宫乐图）撕票交互 ============
+   撕裂物理：拉伸出纤维 → 逐根崩断并回缩 → 三点悬挂 → 抛落淡出
+   另加：纯点击自动撕下、指针 3D 倾斜与图面视差。整套状态跑在 rAF 上，不再依赖 CSS 过渡 */
 (function () {
   const folder = document.getElementById('folderRoot');
   const ttPop = document.getElementById('ttPop');
   if (!folder || !ttPop) return;
   const fstage = folder.querySelector('.folder-stage');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const rad = d => d * Math.PI / 180;
@@ -2782,8 +2958,12 @@ route();
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
   const ff = n => (n === undefined || n === null ? 0 : n).toFixed(2);
+
   const W = 460, H = 250, S = 150, R = 16, HOLES = 12, HOLE = 6, NOTCH = 3, ROUGH = 0;
   const TEAR_ANGLE = 30, STRETCH = 28, RESISTANCE = 0.4;
+  const RETRACT = 0.17;        // 断口纤维回缩时长（秒）
+  const GRAVITY = 2400;        // 抛落重力
+  const TILT_MAX = 7, TILT_REACH = 320, PARALLAX = 6, PERSPECTIVE = 1000, ROTATE = 4;
 
   function buildGeometry() {
     const x = W - S, hr = HOLE / 2, n = Math.max(1, Math.round(HOLES));
@@ -2816,9 +2996,10 @@ route();
     return { body: body, stub: stub, bridges: bridges, bodyOutline: bodyOutline, stubOutline: stubOutline, cross: H };
   }
 
-  // 每张票根自成一体：独立 geo / 状态 / 撕裂交互，撕开即进入对应场景
+  /* 每张票根自成一体：独立 geo / 物理状态 / 撕裂交互，撕开即进入对应场景 */
   function buildTicket(scene) {
     const geo = buildGeometry();
+    const n = geo.bridges.length;
     function el(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
     const root = el('div', 'tt'), stage = el('div', 'tt__stage'), plane = el('div', 'tt__plane');
     const bodyPiece = el('div', 'tt__piece');
@@ -2843,7 +3024,8 @@ route();
       fibresSvg.appendChild(a); fibresSvg.appendChild(b); fibres.push(a, b);
     });
     const stubPiece = el('div', 'tt__piece tt__piece--stub');
-    stubPiece.setAttribute('role', 'button'); stubPiece.setAttribute('tabindex', '0'); stubPiece.setAttribute('aria-label', '撕下票根：' + scene.ticketName);
+    stubPiece.setAttribute('role', 'button'); stubPiece.setAttribute('tabindex', '0');
+    stubPiece.setAttribute('aria-label', '撕下票根：' + scene.ticketName);
     const stubEdge = el('svg', 'tt__edge'); stubEdge.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     const stubEdgePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     stubEdgePath.setAttribute('d', geo.stubOutline); stubEdge.appendChild(stubEdgePath);
@@ -2860,68 +3042,210 @@ route();
 
     const limit = rad(TEAR_ANGLE);
     const s = {
-      id: null, sign: 1,
-      hinge: { x: 0, y: 0 }, hingeV: 0,
-      start: { x: 0, y: 0 }, point: { x: 0, y: 0 },
-      a0: 0, theta: 0, sx: 0, sy: 0,
-      snapped: [], span: []
+      raf: 0, last: 0, phase: 'idle', id: null,
+      sign: 1, hinge: { x: 0, y: 0 }, hingeV: 0,
+      grab: { x: 0, y: 0 }, start: { x: 0, y: 0 }, point: { x: 0, y: 0 },
+      a0: 0, theta: 0,
+      sx: 0, sy: 0, vx: 0, vy: 0, spin: 0,
+      pvx: 0, pvy: 0, pt: 0,
+      fade: 1, age: 0, bx: 0, bv: 0,
+      snapped: [], snapAt: [], span: [],
+      auto: 0, autoT0: 0, autoX: 0
     };
-    geo.bridges.forEach(() => { s.snapped.push(false); s.span.push(0); });
+    for (let i = 0; i < n; i++) { s.snapped.push(false); s.snapAt.push(0); s.span.push(0); }
     let torn = false, done = false;
 
-    function local(e) {
-      const r = stage.getBoundingClientRect(); const k = r.width / W || 1;
-      return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k };
-    }
-    function allTorn() { return s.snapped.every(Boolean); }
-    function applyStub() {
-      stubPiece.style.transform = 'translate(' + s.sx.toFixed(2) + 'px,' + s.sy.toFixed(2) + 'px) rotate(' + (s.theta * s.sign * 180 / Math.PI).toFixed(2) + 'deg)';
-    }
-    function hideFibres() { fibres.forEach(p => { p.style.opacity = '0'; }); }
-    function paintFibres() {
+    /* ---------- 绘制：票根位移、纸面震颤、断口纤维 ---------- */
+    function paint(now) {
+      stubPiece.style.transform = 'translate(' + s.sx.toFixed(2) + 'px,' + s.sy.toFixed(2) + 'px) rotate('
+        + (s.theta * s.sign * 180 / Math.PI).toFixed(3) + 'deg)';
+      stubPiece.style.opacity = s.fade.toFixed(3);
+      bodyPiece.style.transform = 'translateX(' + s.bx.toFixed(2) + 'px)';
+
       const cos = Math.cos(s.theta * s.sign), sin = Math.sin(s.theta * s.sign);
+      let busy = false;
       geo.bridges.forEach((b, i) => {
+        const near = fibres[i * 2], far = fibres[i * 2 + 1];
+        if (!near || !far) return;
         const dx = b.x - s.hinge.x, dy = b.y - s.hinge.y;
         const tx = s.hinge.x + dx * cos - dy * sin + s.sx;
         const ty = s.hinge.y + dx * sin + dy * cos + s.sy;
-        const gx = tx - b.x, gy = ty - b.y, gap = Math.hypot(gx, gy);
-        const near = fibres[i * 2], far = fibres[i * 2 + 1];
-        if (gap < 0.4) { near.style.opacity = '0'; far.style.opacity = '0'; return; }
-        const k = clamp(gap / STRETCH, 0, 1), sag = gap * 0.16;
-        const w = (1.7 - 1.1 * k).toFixed(2);
-        near.setAttribute('d', 'M' + ff(b.x) + ',' + ff(b.y - 1.5) + 'Q' + ff(b.x + gx / 2) + ',' + ff(b.y - 1.5 + sag + gy / 2) + ' ' + ff(tx) + ',' + ff(ty - 1.5));
-        far.setAttribute('d', 'M' + ff(b.x) + ',' + ff(b.y + 1.5) + 'Q' + ff(b.x + gx / 2) + ',' + ff(b.y + 1.5 + gy - sag / 2) + ' ' + ff(tx) + ',' + ff(ty + 1.5));
-        near.style.strokeWidth = w; far.style.strokeWidth = w;
-        near.style.opacity = '1'; far.style.opacity = '1';
-        s.span[i] = gap;
-      });
-    }
-    /* 拖动时同步计算（pointermove），不依赖 rAF */
-    function heldCompute() {
-      const dx0 = s.point.x - s.start.x, dy0 = s.point.y - s.start.y;
-      const a = Math.atan2(s.point.y - s.hinge.y, s.point.x - s.hinge.x);
-      let intact = 0; for (const z of s.snapped) if (!z) intact++;
-      const hold = intact / s.snapped.length;
-      const follow = 0.92 * (1 - clamp(RESISTANCE, 0, 0.9) * hold);
-      const want = clamp(wrap(a - s.a0) * s.sign * follow, 0, limit + 0.08);
-      s.theta = want;
-      s.sx = clamp(dx0 * 0.62, -16, 80); s.sy = clamp(dy0 * 0.62, -80, 80);
-      geo.bridges.forEach((b, i) => {
-        if (s.snapped[i]) return;
-        const d = Math.abs(b.mid - s.hingeV);
-        const rot = 2 * d * Math.sin(s.theta / 2);
-        if (rot + Math.hypot(s.sx, s.sy) > STRETCH || s.theta >= limit) {
-          s.snapped[i] = true; s.span[i] = Math.max(rot, Math.hypot(s.sx, s.sy));
+        const ox = b.x + s.bx, oy = b.y;
+        const gx = tx - ox, gy = ty - oy;
+        const gap = Math.hypot(gx, gy);
+
+        if (!s.snapped[i]) {
+          const live = s.phase !== 'idle' && !reduceMotion;
+          if (!live || gap < 0.35) { near.style.opacity = '0'; far.style.opacity = '0'; return; }
+          const k = clamp(gap / STRETCH, 0, 1);
+          const sag = gap * 0.18;
+          const w = (1.7 - 1.15 * k).toFixed(2);
+          const mx = ox + gx / 2, my = oy + gy / 2 + sag;
+          near.setAttribute('d', 'M' + ff(ox) + ',' + ff(oy - 1.6) + 'Q' + ff(mx) + ',' + ff(my - 1.6) + ' ' + ff(tx) + ',' + ff(ty - 1.6));
+          far.setAttribute('d', 'M' + ff(ox) + ',' + ff(oy + 1.6) + 'Q' + ff(mx) + ',' + ff(my + 1.6) + ' ' + ff(tx) + ',' + ff(ty + 1.6));
+          near.style.strokeWidth = w; far.style.strokeWidth = w;
+          near.style.opacity = '1'; far.style.opacity = '1';
+          s.span[i] = gap;
+          return;
         }
+
+        /* 已崩断：纤维从两端回缩消失 */
+        const t = (now - s.snapAt[i]) / 1000 / RETRACT;
+        if (!s.snapAt[i] || t >= 1) { near.style.opacity = '0'; far.style.opacity = '0'; return; }
+        busy = true;
+        const left = (1 - t) * (1 - t);
+        const len = (s.span[i] || STRETCH) * 0.5 * left;
+        const ux = gap > 0.01 ? gx / gap : 1, uy = gap > 0.01 ? gy / gap : 0;
+        near.setAttribute('d', 'M' + ff(ox) + ',' + ff(oy) + 'L' + ff(ox + ux * len) + ',' + ff(oy + uy * len));
+        far.setAttribute('d', 'M' + ff(tx) + ',' + ff(ty) + 'L' + ff(tx - ux * len) + ',' + ff(ty - uy * len));
+        near.style.strokeWidth = '0.9'; far.style.strokeWidth = '0.9';
+        near.style.opacity = left.toFixed(2); far.style.opacity = left.toFixed(2);
       });
-      applyStub(); paintFibres();
+      return busy;
+    }
+
+    /* ---------- 物理积分 ---------- */
+    function step(now) {
+      const dt = clamp((now - s.last) / 1000, 0.001, 0.034);
+      s.last = now;
+
+      if (s.phase === 'held') {
+        if (s.auto) {
+          const t = clamp((now - s.autoT0) / 520, 0, 1);
+          const e = 1 - Math.pow(1 - t, 3);
+          s.point.x = s.start.x + s.autoX * e;
+          s.point.y = s.start.y + 22 * e * e;
+        }
+        let intact = 0;
+        for (let i = 0; i < n; i++) if (!s.snapped[i]) intact++;
+        const hold = n ? intact / n : 0;
+        const follow = 0.92 * (1 - clamp(RESISTANCE, 0, 0.95) * hold);
+        const a = Math.atan2(s.point.y - s.hinge.y, s.point.x - s.hinge.x);
+        const want = clamp(wrap(a - s.a0) * s.sign * follow, 0, limit + 0.1);
+        s.theta += (want - s.theta) * (1 - Math.exp(-dt / 0.035));
+        const away = clamp((s.point.x - s.start.x) * 0.05, -2, 4);
+        const side = clamp((s.point.y - s.start.y) * 0.05, -3, 3);
+        s.sx += (away - s.sx) * (1 - Math.exp(-dt / 0.05));
+        s.sy += (side - s.sy) * (1 - Math.exp(-dt / 0.05));
+
+        const slack = Math.hypot(s.sx, s.sy);
+        let left = 0;
+        geo.bridges.forEach((b, i) => {
+          if (s.snapped[i]) return;
+          const d = Math.abs(b.mid - s.hingeV);
+          if (2 * d * Math.sin(s.theta / 2) + slack > STRETCH || s.theta >= limit) {
+            s.snapped[i] = true; s.snapAt[i] = now; s.span[i] = Math.max(slack, 2 * d * Math.sin(s.theta / 2));
+            s.bv -= 560 / n;                      // 每断一根，纸面回弹一下
+          } else left++;
+        });
+        if (s.auto && now - s.autoT0 > 1000) {     // 兜底：自动撕票最多 1s
+          geo.bridges.forEach((b, i) => { if (!s.snapped[i]) { s.snapped[i] = true; s.snapAt[i] = now; left--; } });
+          left = 0;
+        }
+        if (left === 0) {
+          s.phase = 'free';
+          s.bv -= 150;
+          if (s.auto) {                            // 点击撕票：断开即抛飞，不必等松手
+            s.phase = 'drop';
+            s.vx = 860; s.vy = -190; s.spin = 2.6 * s.sign;
+            s.age = 0; s.fade = 1;
+          }
+        }
+      } else if (s.phase === 'free') {
+        const cos = Math.cos(s.theta * s.sign), sin = Math.sin(s.theta * s.sign);
+        const gx = s.grab.x - s.hinge.x, gy = s.grab.y - s.hinge.y;
+        const wx = s.point.x - s.hinge.x - (gx * cos - gy * sin);
+        const wy = s.point.y - s.hinge.y - (gx * sin + gy * cos);
+        s.sx += (wx - s.sx) * (1 - Math.exp(-dt / 0.045));
+        s.sy += (wy - s.sy) * (1 - Math.exp(-dt / 0.045));
+        const hang = limit * 0.55 + clamp(s.pvx * 0.0009 * s.sign, -0.3, 0.3);
+        s.theta += (hang - s.theta) * (1 - Math.exp(-dt / 0.12));
+      } else if (s.phase === 'drop') {
+        s.age += dt;
+        s.vy += GRAVITY * dt;
+        s.sx += s.vx * dt; s.sy += s.vy * dt;
+        s.theta += s.spin * dt;
+        if (s.age > 0.16) s.fade = clamp(1 - (s.age - 0.16) / 0.42, 0, 1);
+        if (s.fade <= 0) { s.phase = 'idle'; finish(); }
+      } else if (s.phase === 'return') {
+        s.theta += (0 - s.theta) * (1 - Math.exp(-dt / 0.09));
+        s.sx += (0 - s.sx) * (1 - Math.exp(-dt / 0.07));
+        s.sy += (0 - s.sy) * (1 - Math.exp(-dt / 0.07));
+        if (Math.abs(s.theta) < 0.001 && Math.hypot(s.sx, s.sy) < 0.08) {
+          s.theta = 0; s.sx = 0; s.sy = 0; s.phase = 'idle';
+        }
+      }
+
+      /* 纸面震颤（断开时的回弹） */
+      s.bv += (-520 * s.bx - 30 * s.bv) * dt;
+      s.bx += s.bv * dt;
+
+      const busy = paint(now);
+      const moving = Math.abs(s.bx) > 0.02 || Math.abs(s.bv) > 0.5;
+      if (s.phase !== 'idle' || moving || busy) s.raf = requestAnimationFrame(step);
+      else {
+        s.bx = 0; s.bv = 0; paint(now); s.raf = 0;
+      }
+    }
+    function run() {
+      if (s.raf) return;
+      s.last = performance.now();
+      s.raf = requestAnimationFrame(step);
+    }
+    function stop() {
+      if (s.raf) cancelAnimationFrame(s.raf);
+      s.raf = 0;
+    }
+    function hideFibres() { fibres.forEach(p => { p.style.opacity = '0'; }); }
+
+    /* ---------- 3D 倾斜 + 图面视差 ---------- */
+    let tiltX = 0, tiltY = 0, goalX = 0, goalY = 0, tiltRaf = 0;
+    const depth = PARALLAX / TILT_MAX;
+    function applyTilt() {
+      plane.style.transform = 'perspective(' + PERSPECTIVE + 'px) rotate(' + ROTATE + 'deg) rotateX('
+        + tiltX.toFixed(2) + 'deg) rotateY(' + tiltY.toFixed(2) + 'deg)';
+      const ax = -tiltY * depth, ay = tiltX * depth;
+      image.style.transform = 'translate3d(' + ax.toFixed(2) + 'px,' + ay.toFixed(2) + 'px,0)';
+      content.style.transform = 'translate3d(' + (tiltY * depth * 0.22).toFixed(2) + 'px,'
+        + (-tiltX * depth * 0.22).toFixed(2) + 'px,0)';
+    }
+    function tiltLoop() {
+      const k = 0.14;
+      tiltX += (goalX - tiltX) * k;
+      tiltY += (goalY - tiltY) * k;
+      applyTilt();
+      if (Math.abs(goalX - tiltX) > 0.02 || Math.abs(goalY - tiltY) > 0.02) {
+        tiltRaf = requestAnimationFrame(tiltLoop);
+      } else { tiltX = goalX; tiltY = goalY; applyTilt(); tiltRaf = 0; }
+    }
+    function tiltTo(x, y) {
+      goalX = x; goalY = y;
+      if (!tiltRaf) tiltRaf = requestAnimationFrame(tiltLoop);
+    }
+    applyTilt();
+    if (!reduceMotion) {
+      window.addEventListener('pointermove', e => {
+        if (e.pointerType === 'touch' || s.id !== null || torn) return;
+        if (!ttPop.classList.contains('show')) return;
+        const r = root.getBoundingClientRect();
+        if (!r.width) return;
+        const nx = clamp((e.clientX - (r.left + r.width / 2)) / (r.width / 2 + TILT_REACH), -1, 1);
+        const ny = clamp((e.clientY - (r.top + r.height / 2)) / (r.height / 2 + TILT_REACH), -1, 1);
+        tiltTo(-ny * TILT_MAX, nx * TILT_MAX);
+      }, { passive: true });
+    }
+
+    /* ---------- 指针交互 ---------- */
+    function local(e) {
+      const r = stage.getBoundingClientRect(), k = r.width / W || 1;
+      return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k };
     }
     function onDown(e) {
-      if (torn || e.button !== 0 || s.id !== null) return;
+      if (torn || e.button !== 0 || s.id !== null || s.phase === 'drop') return;
       try { stubPiece.setPointerCapture(e.pointerId); } catch (err) {}
       const p = local(e);
-      s.id = e.pointerId; s.start = p; s.point = p;
-      stubPiece.style.transition = 'none';
+      s.id = e.pointerId; s.start = p; s.point = { x: p.x, y: p.y };
+      s.pt = performance.now(); s.pvx = 0; s.pvy = 0; s.auto = 0;
       if (s.theta < 0.01) {
         const far = p.y < geo.cross / 2;
         const end = geo.bridges[far ? geo.bridges.length - 1 : 0];
@@ -2930,110 +3254,147 @@ route();
         s.hingeV = end.mid;
         stubPiece.style.transformOrigin = s.hinge.x + 'px ' + s.hinge.y + 'px';
       }
-      s.a0 = Math.atan2(p.y - s.hinge.y, p.x - s.hinge.x) - s.theta * s.sign;
+      const cos = Math.cos(-s.theta * s.sign), sin = Math.sin(-s.theta * s.sign);
+      const ux = p.x - s.sx - s.hinge.x, uy = p.y - s.sy - s.hinge.y;
+      s.grab = { x: s.hinge.x + ux * cos - uy * sin, y: s.hinge.y + ux * sin + uy * cos };
+      s.a0 = Math.atan2(s.grab.y - s.hinge.y, s.grab.x - s.hinge.x) - (s.theta * s.sign) / 0.92;
+      s.phase = 'held';
+      root.setAttribute('data-grabbing', '');
+      tiltTo(0, 0);
+      run();
     }
     function onMove(e) {
       if (s.id !== e.pointerId) return;
-      s.point = local(e);
-      heldCompute();
+      const p = local(e), now = performance.now();
+      const dt = Math.max(0.004, (now - s.pt) / 1000);
+      s.pvx += ((p.x - s.point.x) / dt - s.pvx) * 0.35;
+      s.pvy += ((p.y - s.point.y) / dt - s.pvy) * 0.35;
+      s.pt = now;
+      s.point = { x: p.x, y: p.y };
     }
     function onUp(e) {
-      if (s.id !== null && e.pointerId !== s.id) return;
-      // 纯点击（几乎未拖拽）：直接撕票进入，避免“点了没反应”
-      const cdx = s.point.x - s.start.x, cdy = s.point.y - s.start.y;
-      const isClick = (cdx * cdx + cdy * cdy) < 120;
+      if (s.id !== e.pointerId) return;
+      const dx = s.point.x - s.start.x, dy = s.point.y - s.start.y;
+      const dist = Math.hypot(dx, dy);
       s.id = null;
       try { if (stubPiece.hasPointerCapture(e.pointerId)) stubPiece.releasePointerCapture(e.pointerId); } catch (err) {}
-      if (isClick && !torn) { tearNow(); return; }
-      if (allTorn()) {
-        /* CSS transition 掉落（不依赖 rAF），setTimeout 保证 finish */
-        const dir = s.sign * 50;
-        stubPiece.style.transition = 'transform .55s cubic-bezier(.45,.05,.7,.3), opacity .55s ease-in';
-        stubPiece.style.transform = 'translate(72px,230px) rotate(' + dir + 'deg)';
-        stubPiece.style.opacity = '0';
-        fibresSvg.style.transition = 'opacity .5s ease';
-        fibresSvg.style.opacity = '0';
-        setTimeout(finish, 580);
-      } else {
-        /* 未撕裂：票根回位 */
-        stubPiece.style.transition = 'transform .32s ease, opacity .32s ease';
-        stubPiece.style.transform = 'translate(0px,0px) rotate(0deg)';
-        stubPiece.style.opacity = '1';
-        s.theta = 0; s.sx = 0; s.sy = 0;
-        setTimeout(hideFibres, 340);
+      root.removeAttribute('data-grabbing');
+      if (dist < 7 && s.phase === 'held') { startAuto(dx >= 0 ? 1 : -1); return; }
+      if (s.phase === 'free') {
+        const still = performance.now() - s.pt > 80;
+        s.vx = still ? 0 : clamp(s.pvx, -1600, 1600);
+        s.vy = still ? 0 : clamp(s.pvy, -1600, 1200);
+        s.spin = clamp(s.vx * 0.004, -6, 6) + 1.2 * s.sign;
+        s.age = 0; s.phase = 'drop';
+      } else if (s.phase === 'held') {
+        // 已经撕断过桥（纸已破）：松手顺势自动撕完，不再整段弹回
+        const anySnapped = s.snapped.some(Boolean);
+        if (anySnapped) { startAuto(dx >= 0 ? 1 : -1); return; }
+        s.phase = 'return';
       }
+      run();
     }
+    /* 纯点击：沿拖动方向自动撕下，全程仍是真实断桥与回缩 */
+    function startAuto(dir) {
+      const cos = Math.cos(-s.theta * s.sign), sin = Math.sin(-s.theta * s.sign);
+      const dx = s.grab.x - s.hinge.x, dy = s.grab.y - s.hinge.y;
+      s.point = { x: s.hinge.x + dx * cos - dy * sin + s.sx, y: s.hinge.y + dx * sin + dy * cos + s.sy };
+      s.start = { x: s.point.x, y: s.point.y };
+      s.auto = 1;
+      s.autoT0 = performance.now();
+      s.autoX = 150 * (dir < 0 ? -1 : 1);
+      s.phase = 'held';
+      run();
+    }
+
     function finish() {
       stubPiece.style.visibility = 'hidden';
       if (torn) return;
       torn = true;
-      setTimeout(enterFromTicket, 480);
+      root.setAttribute('data-torn', '');
+      enterFromTicket();
     }
-    function tearNow() {
-      s.snapped = s.snapped.map(() => true);
-      stubPiece.style.visibility = 'hidden';
-      hideFibres();
-      finish();
-    }
+
     stubPiece.addEventListener('pointerdown', onDown);
     stubPiece.addEventListener('pointermove', onMove);
     stubPiece.addEventListener('pointerup', onUp);
     stubPiece.addEventListener('pointercancel', onUp);
     stubPiece.addEventListener('keydown', e => {
       if (torn || (e.key !== 'Enter' && e.key !== ' ')) return;
-      e.preventDefault(); if (!e.repeat) tearNow();
+      e.preventDefault();
+      if (e.repeat) return;
+      if (reduceMotion) {
+        for (let i = 0; i < n; i++) { s.snapped[i] = true; s.snapAt[i] = performance.now(); }
+        hideFibres(); stubPiece.style.visibility = 'hidden'; finish();
+      } else { startAuto(1); }
     });
     stubPiece.addEventListener('dragstart', e => e.preventDefault());
 
+    /* ---------- 撕下 → 图面放大 → 开始界面 ---------- */
     function enterFromTicket() {
       if (done) return;
       done = true;
+      stop();
+      stubPiece.style.visibility = 'hidden';
       activateScene(scene.key);            // 先切到对应场景：换画、热点、乐器简介、intro
+
       const r = art.getBoundingClientRect();
-      const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-      const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+      const vw = document.documentElement.clientWidth || window.innerWidth;
+      const vh = document.documentElement.clientHeight || window.innerHeight;
       const zoom = document.createElement('div');
       zoom.className = 'tt-zoom';
       const zimg = document.createElement('img');
-      zimg.src = scene.img; zimg.alt = scene.ticketAlt;
+      zimg.src = scene.img; zimg.alt = scene.ticketAlt; zimg.draggable = false;
       zoom.appendChild(zimg);
+      zoom.style.left = r.left + 'px';
+      zoom.style.top = r.top + 'px';
+      zoom.style.width = r.width + 'px';
+      zoom.style.height = r.height + 'px';
+      zoom.style.borderRadius = '8px';
       document.body.appendChild(zoom);
-      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      const sc = Math.max(0.05, Math.min(r.width / vw, r.height / vh));
-      zoom.style.opacity = '1';
-      zoom.style.transform = 'translate(' + (cx - vw / 2).toFixed(0) + 'px,' + (cy - vh / 2).toFixed(0) + 'px) scale(' + sc.toFixed(3) + ')';
-      void zoom.offsetWidth; // 强制回流：确保放大起点已绘制，转场才平滑触发而非瞬间跳变
-      zoom.style.transform = 'translate(0px,0px) scale(1)';
-      setTimeout(function () { zoom.classList.add('fade'); }, 1060);
-      setTimeout(function () { if (zoom.parentNode) zoom.parentNode.removeChild(zoom); }, 1800);
+
+      const k = Math.max(vw / r.width, vh / r.height);
+      const tx = vw / 2 - (r.left + r.width / 2);
+      const ty = vh / 2 - (r.top + r.height / 2);
+
       const welcome = document.getElementById('welcome');
       if (welcome) {
         welcome.classList.add('hide');
-        setTimeout(function () {
-          if (welcome.parentNode) welcome.parentNode.removeChild(welcome);
-          // 放大收尾与开始界面淡入重叠衔接：内容淡入上移 24px，只一次
-          const ic = document.getElementById('intro-content');
-          if (ic) {
-            ic.classList.add('in');
-            // SplitText rise：开始界面标题逐字升起（无 React，原生拆分字符 + GSAP stagger）
-            if (typeof gsap !== 'undefined') {
-              const h1 = ic.querySelector('h1');
-              if (h1 && h1.getAttribute('data-split') !== '1') {
-                h1.setAttribute('data-split', '1');
-                const text = h1.textContent;
-                const chars = Array.from(text).map(ch =>
-                  '<span style="display:inline-block;white-space:pre">' + (ch === ' ' ? '&nbsp;' : ch) + '</span>'
-                ).join('');
-                h1.innerHTML = chars;
-                const spans = h1.querySelectorAll('span');
-                gsap.fromTo(spans,
-                  { autoAlpha: 0, y: 42, filter: 'blur(4px)' },
-                  { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.25, ease: 'power2.out', stagger: { each: 0.04, from: 'start' }, delay: 0.25, overwrite: true });
-              }
-            }
-          }
-        }, 1000);
+        setTimeout(function () { if (welcome.parentNode) welcome.parentNode.removeChild(welcome); }, 760);
       }
+
+      const fadeZoom = function () {
+        zoom.classList.add('fade');
+        setTimeout(function () { if (zoom.parentNode) zoom.parentNode.removeChild(zoom); }, 740);
+      };
+      if (typeof gsap !== 'undefined' && !reduceMotion) {
+        gsap.to(zoom, {
+          x: tx, y: ty, scale: k, borderRadius: 0,
+          duration: 1.06, ease: 'power3.inOut', onComplete: fadeZoom
+        });
+      } else {
+        zoom.style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) scale(' + k.toFixed(2) + ')';
+        setTimeout(fadeZoom, 420);
+      }
+      setTimeout(revealIntro, 560);
+    }
+
+    function revealIntro() {
+      const ic = document.getElementById('intro-content');
+      if (!ic) return;
+      ic.classList.add('in');
+      if (typeof gsap === 'undefined') return;
+      const h1 = ic.querySelector('h1');
+      if (!h1 || h1.getAttribute('data-split') === '1') return;
+      h1.setAttribute('data-split', '1');
+      const chars = Array.from(h1.textContent).map(ch =>
+        '<span style="display:inline-block;white-space:pre">' + (ch === ' ' ? '&nbsp;' : ch) + '</span>'
+      ).join('');
+      h1.innerHTML = chars;
+      gsap.fromTo(h1.querySelectorAll('span'),
+        { autoAlpha: 0, y: 44, filter: 'blur(5px)' },
+        { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.3, ease: 'power2.out',
+          stagger: { each: 0.038, from: 'start' }, delay: 0.16, overwrite: true });
     }
 
     root.__sceneKey = scene.key;
@@ -3047,8 +3408,8 @@ route();
   function openFolder() {
     if (opened) return;
     opened = true;
-    folder.toggleAttribute('data-open', true);
-    setTimeout(function () { ttPop.classList.add('show'); }, 300);
+    folder.setAttribute('data-open', '');
+    setTimeout(function () { ttPop.classList.add('show'); }, 280);
   }
   fstage.addEventListener('click', openFolder);
   fstage.addEventListener('keydown', e => {
