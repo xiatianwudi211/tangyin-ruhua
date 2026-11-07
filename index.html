@@ -4,11 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>合乐图 · 唐音入画 · 中国古画中的民乐</title>
-<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700&family=Cormorant+Garamond:wght@400;600&display=swap">
+<!-- 关键资源预加载：首屏画卷 + 标题字体（大幅缩短白屏） -->
+<link rel="preload" as="image" href="assets/scroll.webp" fetchpriority="high">
+<link rel="preload" as="image" href="assets/intro_seg0.webp" fetchpriority="high">
+<link rel="preload" as="font" type="font/woff2" href="assets/aoyagi-reisho.woff2" crossorigin>
+<!-- 外部字体 CSS 改为非阻塞加载：避免该请求缓慢导致整页白屏 -->
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700&family=Cormorant+Garamond:wght@400;600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700&family=Cormorant+Garamond:wght@400;600&display=swap"></noscript>
+<script>
+/* LQIP 微缩占位图：大图加载前先铺模糊底图，杜绝空白 */
+window.__LQIP = {"scroll":"data:image/webp;base64,UklGRkwAAABXRUJQVlA4IEAAAABQAwCdASoWAAUAPulgqk2pJaQiMAgBIB0JQBOmUACL1tvswADh8A1oca4Tb5EzpCwwHQxVKUIwCPKN9FeswAAA","gongle":"data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAADwAgCdASoWAA8APuleqE0pJSOiMAgBIB0JZQCsAC5JAAD+5CxfLwXk/WPfLM7n7GCNKfXzCiUxZbQAAAA=","intro_seg0":"data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAACQAwCdASoWAA4APulgqE0pJaOiMAgBIB0JQBdgBD3qD8ZDalAAAPfQIV4xBY1hCvZ8GW3s3BjvcsQQwTS48YW7fEwAAA==","intro_seg1":"data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAACQAwCdASoWAA4APulgqE0pJaQiMAgBIB0JQBOgBDh1P3eQx2IAAN4i7h+T6Ekq4wmO6iZ/SqyXVAV166ujjiXA55F0n4gA","intro_seg2":"data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAABwAwCdASoWAA4APuliqE2pJaOiMAgBIB0JQBdgBDpBUFG4WSAA3iLuHscD8bVS6c6S6Fr6hzDaEeDZe00oB28AAAA=","intro_seg3":"data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAACQAwCdASoWAA4APulgqE0pJaQiMAgBIB0JQBdgA9If/81hcYAQAP7qku2/P6VaVMSBpx1tiHLUasBSbBidy9ME9j/nj7PLQHRAAA==","hele-bg":"data:image/webp;base64,UklGRkwAAABXRUJQVlA4IEAAAABQAwCdASoWAAUAPuliqE2pJaOiMAgBIB0JQBOmUACL1tvswADh8A1oca4Tb5EzpCwwHQxVKUIwCPKN9FeswAAA","gongle-bg":"data:image/webp;base64,UklGRkYAAABXRUJQVlA4IDoAAADwAgCdASoWAA8APulgqE0pJaOiMAgBIB0JZQCsAC5JAAD+5CxfLwXk/WPfLM7n7GCNKfXzCfg7MgAA","jiangu":"data:image/webp;base64,UklGRr4BAABXRUJQVlA4WAoAAAAQAAAAFQAADgAAQUxQSM0AAAABgGJte2LnSzIMZUZPqpbra+u6iC6C0eIOru0GyFVdX3TMHPoLmVlDREwAnAJA+2AOCJTlqJk9un6+rIyDl+AYPiH3CgRzMIG+V/rWxhipaA4CAGNxwPfp2zqNpCEEHgtqWzBOyhZK2kGShkljG+atLNJUDcI4rGtqww6VMHTV4cdRQ3sXNmyp644wS/z6XsyQKtJUDfM0AkK0P1pTIO0WfAYADHskXUbSOAT+czYpSf3TinbB4eaYfiBrrSHa9DgrgEBf5VMpfTwFMAAAAFZQOCDKAAAAsAQAnQEqFgAPAD7pXqdNKSUjojAIASAdCWwAnTKDGANH6XQzjugPQ0nJ8GKUEAD+cWp95GbrRO8sBJCyeKayd0PB7+6aLCfWvcfEs4yFz9HSzRqIhayyJXHbu+IXslAOqm5rce1WLc8cpmNKutqez8ICxyi1n3AxHKPnOdGfN1d/dQRzOc0PrKthahqeqw4Jbq3isCvLs2I6Y5YGuA2UG5rEogOPMmI15VkCxxYgLvFp01aj/P/MoWX/P/ZsiV2f6R/ZyZ/pdAAAAA==","fangxiang":"data:image/webp;base64,UklGRrABAABXRUJQVlA4WAoAAAAQAAAAFQAACwAAQUxQSPoAAAABkGzbtrFH+3yxbdu2bdtOekbftm3btu2kuuYjVM/1DhExAXxdPrKy0iqqSup6OrpqqioKCrLRQ1wcLZNzR4/Dbfudc8uzzaP7b95//9nNAhcru8Akf8UCfy97fzPz3JXXL+keQKq/uLioirSek5e9j4KIlIJXpG4avAcS1kZWDneHq0aGdhdXzt9e/XjciTVL1jc2d00pTMpKKWjYamnd/7n3lK8H1jAA4OZlE3ax1AKgA2cJgCMQDEP4LwHwkQavXL04G4EIxBADMOyydXbCGgM/d3gYwv8Zjvufb7RQ9raTnQAi+gdx1l+P8XIaKAuC8DcRAQQOLXlZVlA4IJAAAABwBACdASoWAAwAPuleqE0pJSOiMAgBIB0JYgCdMoAvQBPkqn7koCxu9YuOQAD+4323KhUtYB7VppP4FjFXUja2NNrQAqG6RqxGQKrnBxrzpJpUc78X9dOwK8nviyStSYhoHv0S+b5ekP8DQb7fUaSfF0WmyyHpr0PdJ/8OayTe7Y8B9yBfgZdLjB4QBjcYAAA=","konghou":"data:image/webp;base64,UklGRvgDAABXRUJQVlA4WAoAAAAQAAAAFQAAJwAAQUxQSIECAAABz+WgbSRJWqdmjz/o/xBERF7eDnLnX9EYdRBbFcUjZtGw5CmOPFemOHkT5H0FeU4oaNuGkfr2+DMeiIj+Z0toALgHOto2KZKcPyISqqahunfFzMzMbDGzdAR5TL6OoENIJqPHzMwMA81VnZmRRsNeISImAABY972l9c3LtSSszfn+R2+46vLTscfm2xlwwgGg9WT8/Jd/IkCwPvdbvV//hWKEvI4pfZHGBJ7/inWLPkcmKWB//UF0GaGsoBbaPzri/Rp5CUBE6ri7mYp0yxHKKwyYKHukiuydmVZYZiR1ZTPrxItPSbKQIRlRALGj/Zkvx0qLJolkVzSe9fxeogXRaEstrOM65NQ/B7LguLY2oNFMm7/ZfDCWkkXUWDZI+OtL0MmcAAJnCTF5oTCRv6FH75cBwEbSlJwnSvY/VXM0FgUpMII1ljfyRLDfEsspRTtX8rZVbxL2B5AhSjaIBC6t3dkG9sJiGTdaLGATTBoMgIoB2B6zcUYpA2kecm6XC9arcAnOkcAg8g6UvXLB8JNsGtbufBA2PEjKsvDknWFPTSzf+HL/p/tQxGbktdkexel4RKZ99CFSoTr17M54prUL0opwZf9kYAPnPJAEe/h/rwX3ZnXcLz1fKkz8pwrVs+/+8lQFfHfyf7+eY3d2/uvu9Xe5tdf7n2LYgtFg/igwCfreVZ1auBEdtSGlLUDU0ZHZ+8tdf5n/E3Z68LsLVZp72xxkq1bf1KKDEt5pCNjZTe6k7GS29+6fUe8GWtbtN/cKVDgAR7onn3nz5w950JHO1aiwWA9G/9SHtt6D3Xzup/v8n7/HOc/+2JxOAICIfxiMn8S6QkhZw0w5Q5bknHPCIgBWUDggUAEAANAGAJ0BKhYAKAA+6WSqTqklo6IlbmEgHQlkAKwzMNTWRFYJym+gCxy3oiEoGBXdn2qgrA+pOrPfK5nKV5Y4AAD+cbcE5ycTe+a3ZtbNuiN52XH0ymscc+vnxCVuqYDnOMy73UMXnbhvt2q7aznT71UxxkxHjegmZF+GsoJiQGDm9E/UnCGRCm3d8XAr7MTNZQ/ia9voXzmS0fRZ+DxKOuK3YMGJVXwHEe8NsOnOSQWZuGZSdQTxq4pa/GJclxQ36eZUvxoCJxzD3uY94uP2uF8ZCDG5tjjFP9U7fEs+Ppc0Ss9E/QtgD6rhw9iJsih5/5Gi4I4lMqrvHckaw9O9iKdVfzt0h9cfUfdI6oD8LO4TesR6Q6Y1uIxfAz00VgFBPkGIgbCmzTQD2h+Pnn0KqLvv4Dy/P0U3m5uL7TBPw+wmDTWP2OOTR/+Iiwm0BqBIAA==","pipa":"data:image/webp;base64,UklGRhACAABXRUJQVlA4WAoAAAAQAAAAFQAAFwAAQUxQSAMBAAABkLJtm2rVM3pHNsmbW4RoyUk0d8mQiNbd3R2qQ4fGRXSJTnI7OmvNd2Rmr4iYAHhlLGg5aK7bC0NCb8kYkRcwUdv4cJnvjePqpDXdC/Nh/bU9fMUDkxh5jazsh0eJDkoCS+X/CSmE5IAPLZQLif8Zg5EHoIFqIQEOcCCza2OtLQ2ooxb48D9HzA4ZJ+tpFBJGFntNzm+lfmuiVUhm4nv0U//v/nRXIGAuI6WtLqVBmHa1H7/1AKTpkVybon1w0w/SdocOYf3wR9E+uOlcO7bfegrS1E3KpigPwhR5rxzTLzrgHNYB0srV2lH0lggbD5t7ItJEdJoMDn8Tl27V52FLIATsAFZQOCDmAAAAcAUAnQEqFgAYAD7pXKlNqSSkIjAYDAEgHQlsALDwCB2Arg426P7i9vS3yBSmN01IydXwPAD+i9ty4tnm8/4FLzZcoPHkPvwjeVGVfE8HLo2xYFbWzNxL5R47CpfGITh0/Xf6de1mkfOTAc99T22qEikcTzQhqjkZvH29E8N5eaJW+x09ZoTGUaYHJPPpgR+zuFn6UfPfCUdz3EbXpm92d9AKuAIZWdvyf+wuDq99ijQ6dmLC+Sh0olVcMWbYBG591YOrkSKXY7oeCvhCV9e5B5rfbFUXdz8BtKAV9HlkvvRj3AhAAAA=","guzheng":"data:image/webp;base64,UklGRpYBAABXRUJQVlA4WAoAAAAQAAAAFQAAEQAAQUxQSMMAAAABgCJr27Ll/gSPlhgiGyCyBevsgObRtbq7u0fXypDcdQX+fnLP8NoWIkJh27ZNCnbvM2BOHlB88Hjekm0Mx0fWNGW6sfQWvDAKBUWbIXyktpMiFvzI12uui7wzhuG/i1z4GqD6jyL+d5ppkrPFOJTWU+FpR7rpNxSRNAG4hp9o4F8sDcPVeSj5DCKpD66jj6JUUNEBTwfUMFZ0GsBJnmKo6JX0mKaIpSEjLGlGzdBLEUaCExZI2yPJcbhmQFLZ9vWcFQAAVlA4IKwAAADwBACdASoWABIAPuliqk4pJaOiKA1RIB0JYgCsMoAlowvWeWINdc7Gfa3W6VQ3jSAA/sNYpfZSomoWL9eQrG4qIPczRXg5eqxDyfnpIkAC9Qt9+TAgMCFRmpAddmuGmuMpU3TsZesEQUA8zdhSBm2ZJWXYS/MZNa2MWnbJmpuW9SCYbwun1oqfgqZ+Z4tqZsF2imZt3rK+G7ZFX4h13XHYDEMcSINvNUMpgAAA","sheng":"data:image/webp;base64,UklGRnwDAABXRUJQVlA4WAoAAAAQAAAAFQAAOQAAQUxQSDQCAAABkHXbmiHJ0m9E5Ni2bdvzZtu2bdu2bdu23bbt7tT3kNEdFRETAI75Y4vkB4Mix9etD2ZAU2FwG3l7mhoQ1O3EBCUGEdP22EQX5EmpfUKNo4xV7ORMF9RMy3x0kZJAyyQcWuKCbnHYu1ZJw4g4bN3oguNB8FujJPDqPxK3KzF81HfRFiXA7xWi9qlpCVfhe0otNx2A33UIlezWenx5opYpeS5uv1PLbizD8R/gKsXpbf1X7lAuSzfbh/9XK0fL8N1HrTItwlt/tbo0DXfDAabQgkbjXLxQ6kCLS/pG5VDqR6EdKSqv0mTya6EnFlFaQT51UlJLgCssI7dKCXZ5pY30u0QMVVbaR797pVBdpUdk2CZ1gsgIY3hOhmlQl4wIAThsg7qlJziQLTu+kmnrNBiaRIA1v0jnM7lJ5ssE6ryhmL3Vc/iRZeu0TCIwzEqdlw0sT5BkroOjFQXVBdd4kUjJSmhgEF+pATIzoGyCZD00CPSlrcgMANXTJDslV6kRuKOhTbaMIVtYeA4wR1uyHbuhcVSkt2BwdiHLcQiaQBu6ACEZTKbjBDQNA2gPNMkg2VFomTCTdqfTyCbHBmTNhHV0GkKymUzbNul/VmTLeoAegEseOmzberbT7c5J+gL5q3Rsi769JjcB5ngms/VUPUknnyyyk2Q4LDLpyj/6w2TjJVZasOfvPj9oPwScTcnSjTRaUiQHetGlLGASHCDLotdZILA/uTY45LzX/vMLC4Iz8FyCQQ5WUDggIgEAADAGAJ0BKhYAOgA+5VyoTSklJCIz9mqpIByJQBmUAkxElFce2Qaqflj9OrW5Q6/fH+aKufs46fWTAYAA/u8gqLQ58INWW0KDwWk67qG3yicJDFwZCbbqc24Jd70PQ/LgwD2cliKRdu/GUMKlcrEaX/hjJfHb4Faygr17xXFCUZPqRMJZbu8rXfC/wwHZ/5GuAJHK1r9+Ov+XRFuC9MBIQNUrE07dgiXs6JqjrJcdMuQOObLbCM43Xc74PvN/+PBpwVB8l0O3FGP+V71FZxXiBhAzlKdFLzX1a09DIG4BOsIouCOggoMNxQwwBHpb5RVEy4C9ssvos7WUlup4m6hOmAuwa9B0rgCeXpOk8lSteir+D7HCK1+NE+IIh2aLaKiYeAAA","hengdi":"data:image/webp;base64,UklGRkwBAABXRUJQVlA4WAoAAAAQAAAAFQAADgAAQUxQSIsAAAABgGJt27Lo+QR3kicahy14o7lDcreukSXQZqJrdLfICqZ5sjV83xIiQmHaNkx3dco6CzCIs/++YQQj4nKdv8ckkAOd/12rGCmD5+a7KIf1n2ObBFI49r7LAJfA1NuJXYyEwbj5XZFABkRfT92gVIQcmtXXWA796ycviARi8TWBOCmB7/4lInFwYLkFAFZQOCCaAAAA8AMAnQEqFgAPAD7pYKhNKSWjojAIASAdCWgAsO2KyGE5/7nveyUmgADidkYJ5kWbGzhOMbrFHOzsVGKwjzEqNBC9ODbRn7sBIGCxSkHXY9m6lZw7cj6+xsKIpqhwBrg3DqOd/5QKEaUflIwMRbr5W8YO9A4iqE27tCHjAL7Cbh+iXjMXhdI0aJ1FByxSF4ReF9p5JXzUWfAAAA==","chiba":"data:image/webp;base64,UklGRpwBAABXRUJQVlA4WAoAAAAQAAAAFQAADAAAQUxQSMgAAAABgGPb2rHnvoiTykZpDeOvslJZVWrblZ0MIbVr27ZtmzceQ0RMAP4pNCDjt4uN8F+hAMuIYfIVzpmBv0kNGEetkOwsrz7jEwChADgkzZHsSi3bJnezIDUA3+Ijkv1F5evkU4MDBGAeNvhKcrSidpNkSzCg4V2xSpKDWaV7JBdCASXQ/kKSs4kJkyRZZwUpATyQ7AmP7SDJRQOg8DP2diDEq4V85VWiCZTA7y7KeoyPZKMnoPCnBLJJzhgAJfBPJe2GmnKtoCT+C1ZQOCCuAAAAkAQAnQEqFgANAD7pXqhNKSUjojAIASAdCWwAnTKDJbJ/2KAs8hEtNW8qXODAAP1waY8FmNVHxqIGXe3PLimdyDWBCycJes4TsFgzAQNbAy/L4hNNkTc0WHk10Oljpw0r9FqIhgTL02s4Umjvgwct/pa6HtP7RPqiKsC3iXX7PllLtrPJ9HxN/jUKtmHBuab56fSryme+J+Orw3rQApOZ9rS10LxBN+2BVEM5kAAA","paiban":"data:image/webp;base64,UklGRpIBAABXRUJQVlA4WAoAAAAQAAAAFQAACwAAQUxQSMgAAAABkGtr27FH9/v9YWX0tnEWqbNSubPR2y6Nyq5t205mppvKL+7xnEJETAD+KoRlb1cTaGcBEPjP80jANw4Qf7JE6Wh/a9VWStneV07AAiAsOwF7l4i8bf6umA3LzgYAPkntx9+olVTqO9kDwCmxcu0jSWpjlCQ/NCT4po7ck6T8rozRkrwq9ATekZTfpTbGaEleZDkDNquZJKUxxkjyJd8ZsBMAkvcWF0ilFb9UewA2AQACgGP3J5LToYCdwJ9tEEB483EBYCfwV1ZQOCCkAAAAkAQAnQEqFgAMAD7pXqhNKSUjojAIASAdCWwAnTKAJbIYu7TGdxPPiJg7jHAAAP1wajBVR56/EZuysR7No0AExCrHAKQsGqsCk3UAg+gsHrp316SsOkOTQoKKbpaKZMI8EmB1msPmSfzbA3nS+NqgMRujfLDV+ljdLDsUWjMYV4nupkKPakF6vpm4p0tufiuHYAJygHHCwplLO4e3ks7jtXQAAAA=","xiyaogu":"data:image/webp;base64,UklGRmACAABXRUJQVlA4WAoAAAAQAAAAFQAAFAAAQUxQSCoBAAABkGttu2k77z/nsd0r7HKqsLIrp8sFmHU62y5to7SNykbNNef8/2Kt7GuIiAkAEE/vahwI7XE0nrwHN2gqkqvKFlOWc7gWJi/FkX+/q8Az58XPTTOmigCe63fw4FluZvZrImVAGSuvlQGMtiykf3a/zgsInRsrgcrnGlQ1s+2U5erXVQMzLKqqppB6qRAon9sPx1ENOY36ogO871gwq0Z4lGKBRns9uxGqJ4yuLJPD9i+klFQ1mn2+eunMt70tMPCF5VMWNQYr/HKwL5VTjn7+F80sqKYQQopmxwWo6+o3eOErC1ocwiPEe/I1Byz8x/YDiHOuHM5ZKEg2MlfopSsLSVWD3XAlUMYK+6uqmY2gVPHujGXxn23Gl4JIxS4zu1DmpSQEVj7YWY0AVlA4IBABAACQBQCdASoWABUAPulqqVCpJaOiqAqpIB0JbAB4NiNJQDeHCIzBeegqdsdoptygJ7ixzt6LgAD40ciKB9J5nPMQMG4+CehSA2v9Bj0QavJiHcuQavdyKp/nVAGfBPrIks2xkl1ZB0gQEcDBPO2wCCcYE7tiUbwX/KrCJtfHjmimW0NK5AGCHw1wAy5sV5dEO1+NwP8a52bfImg4jKOS6VLyIbB8jWstRuB/5yoTIDFPeZKnmi4ydfBzw7Y1KPP+7ICueu+cX5oQTJP46SLwW51dDIcXonISyWrbFQgiZDX6q7Gq5Jj0wD0f3//t/xGtxt4ngRX8nf6EH/jK8WeqP/BAmUO4HI+KrliA7qaybdAAAA==","bili":"data:image/webp;base64,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"};
+</script>
 <style>
 @font-face {
   font-family: 'Aoyagi Reisho';
-  src: url('assets/aoyagi-reisho.otf') format('opentype');
+  /* 子集化 woff2（原 OTF 4.6MB → 106KB），swap 保证字体迟到时不白屏 */
+  src: url('assets/aoyagi-reisho.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -223,6 +234,23 @@ a { color: var(--qing-deep); text-decoration: none; }
   transition: clip-path .6s cubic-bezier(.65, 0, .35, 1);
   will-change: clip-path;
 }
+/* LQIP 模糊占位：大图未就绪时先铺底，切换画卷时同样生效 */
+.painting-wrapper.img-loading {
+  background-size: cover;
+  background-position: center;
+}
+.painting-wrapper .painting-ph {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(236,227,209,0.10) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: paintingShimmer 1.6s linear infinite;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+}
+.painting-wrapper.img-loading .painting-ph { opacity: 1; }
+@keyframes paintingShimmer { from { background-position: 120% 0; } to { background-position: -80% 0; } }
 /* 卷起状态：左右各裁 50%，只剩中间一条线 */
 .painting-wrapper.is-rolling { clip-path: inset(0 50% 0 50%); }
 /* 卷起时两端木轴合拢到中线，形成一根立轴高光 */
@@ -243,7 +271,10 @@ a { color: var(--qing-deep); text-decoration: none; }
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity .7s ease;
 }
+.painting-wrapper.img-ready img { opacity: 1; }
 /* 画卷两端的木轴 */
 .painting-wrapper::before,
 .painting-wrapper::after {
@@ -533,7 +564,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   /* 乐器介绍背景 = 当前场景古画：合乐场景用合乐图，宫乐场景用宫乐图 */
   background-image:
     linear-gradient(rgba(244,238,224,0.08), rgba(244,238,224,0.08)),
-    url('assets/hele-bg.jpg');
+    url('assets/hele-bg.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -541,7 +572,7 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 #view-detail.view-detail--gongle {
   background-image:
     linear-gradient(rgba(244,238,224,0.08), rgba(244,238,224,0.08)),
-    url('assets/gongle-bg.jpg');
+    url('assets/gongle-bg.webp');
 }
 /* 详情页 = DepthCarousel 纵深轮播容器 */
 #detailWrap {
@@ -861,6 +892,22 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   will-change: transform;
   touch-action: none;
 }
+/* 乐器大图未就绪：LQIP 占位 + 微光，加载后淡入并清除占位，杜绝空白 */
+.detail-content.img-loading {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 220px;
+}
+.detail-content.img-loading::after {
+  content: "";
+  display: block;
+  position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(246,241,230,0.14) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: paintingShimmer 1.6s linear infinite;
+  pointer-events: none;
+}
 .detail-content img {
   display: block;
   width: 100%;
@@ -868,7 +915,10 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity .55s ease;
 }
+.detail-content.img-ready img { opacity: 1; }
 .detail-zoom-hint {
   position: absolute;
   right: 10px;
@@ -1188,13 +1238,16 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   align-items: center;
   justify-content: center;
 }
-#intro-bg {
+/* 双层交叉淡入：背景图先在隐藏层解码就绪，再切换可见层，杜绝轮替闪白 */
+#intro-bg, #intro-bg2 {
   position: absolute; inset: 0;
   background-size: cover; background-position: center;
-  opacity: 0.32;
+  opacity: 0;
   filter: sepia(0.35) brightness(0.65);
-  transition: opacity 1.2s ease, background-image 1.2s ease;
+  transition: opacity 1.2s ease;
+  will-change: opacity;
 }
+#intro-bg.show, #intro-bg2.show { opacity: 0.32; }
 #intro-light {
   position: absolute; inset: 0;
   background: radial-gradient(circle 500px at var(--lx, 38%) var(--ly, 58%),
@@ -1650,6 +1703,7 @@ button { -webkit-tap-highlight-color: transparent; }
 <!-- ===== 开始界面 ===== -->
 <div id="intro">
   <div id="intro-bg"></div>
+  <div id="intro-bg2" aria-hidden="true"></div>
   <div id="intro-light"></div>
   <div id="intro-content" class="ac">
     <div class="seal">樂</div>
@@ -1676,7 +1730,8 @@ button { -webkit-tap-highlight-color: transparent; }
     <div class="scroll-track" id="scrollTrack">
       <div class="scroll-track-inner" id="scrollTrackInner">
         <div class="painting-wrapper" id="painting">
-          <img src="assets/scroll.jpg" alt="合乐图（五代南唐·传周文矩）整卷" id="paintingImg">
+          <img src="assets/scroll.webp" alt="合乐图（五代南唐·传周文矩）整卷" id="paintingImg" decoding="async" fetchpriority="high" draggable="false">
+          <div class="painting-ph" aria-hidden="true"></div>
           <!-- 热点由 JS 注入 -->
         </div>
       </div>
@@ -1699,34 +1754,94 @@ button { -webkit-tap-highlight-color: transparent; }
 <script src="assets/gsap.min.js"></script>
 <script src="assets/ScrollTrigger.min.js"></script>
 <script>
+/* ============ 大图安全加载：LQIP 占位 + decode 后淡入 + 失败重试 ============
+   解决三类问题：加载慢时大面积空白 / 大图解码卡顿"闪没" / 网络抖动图片丢失 */
+function __loadImg(img, holder, lqipKey, onReady) {
+  if (!img) return Promise.resolve(false);
+  const LQ = window.__LQIP || {};
+  const base = img.getAttribute('src') || '';
+  if (holder) {
+    if (lqipKey && LQ[lqipKey]) holder.style.backgroundImage = 'url("' + LQ[lqipKey] + '")';
+    holder.classList.remove('img-ready');
+    holder.classList.add('img-loading');
+  }
+  function wait(im) {
+    if (im.complete) return im.naturalWidth > 0 ? Promise.resolve(true) : Promise.resolve(false);
+    return new Promise(res => {
+      im.addEventListener('load', () => res(true), { once: true });
+      im.addEventListener('error', () => res(false), { once: true });
+    });
+  }
+  return wait(img).then(ok => {
+    if (!ok) {
+      if (img.dataset.retried !== '1') {           // 失败自动重试一次（绕过坏缓存）
+        img.dataset.retried = '1';
+        img.src = base + (base.indexOf('?') > -1 ? '&' : '?') + 'retry=' + Date.now();
+        return wait(img);
+      }
+      return false;
+    }
+    if (img.decode) return img.decode().then(() => true).catch(() => true); // 预解码，杜绝渲染时闪没
+    return true;
+  }).then(ok => {
+    if (holder) {
+      holder.classList.remove('img-loading');
+      holder.classList.add('img-ready');
+      // 占位底图用完即清：乐器图为透明 PNG/WebP，残留 LQIP 会透出来
+      holder.style.backgroundImage = '';
+    }
+    if (ok && typeof onReady === 'function') { try { onReady(); } catch (e) {} }
+    return ok;
+  });
+}
+
 /* ============ 开始界面：光影跟随 + 背景按场景配置 ============ */
 (function(){
   const intro = document.getElementById('intro');
   const light = document.getElementById('intro-light');
-  const bg = document.getElementById('intro-bg');
+  const layers = [document.getElementById('intro-bg'), document.getElementById('intro-bg2')];
   const startBtn = document.getElementById('intro-start');
-  let timer = null;
+  let timer = null, front = 0;
+  const segCache = new Map();   // url -> Promise<Image>，每张只解码一次
+
+  function loadSeg(url) {
+    let p = segCache.get(url);
+    if (!p) {
+      p = new Promise(res => {
+        const im = new Image();
+        im.onload = () => res(im);
+        im.onerror = () => res(null);
+        im.src = url;
+      });
+      segCache.set(url, p);
+    }
+    return p;
+  }
+
+  // 先在隐藏层解码就绪再交叉淡入，轮替时不再闪白/闪没
+  function showSeg(seg) {
+    const url = seg.img.indexOf('assets/') === 0 ? seg.img : 'assets/' + seg.img;
+    loadSeg(url).then(() => {
+      const back = layers[1 - front];
+      back.style.backgroundImage = `url('${url}')`;
+      back.classList.add('show');
+      layers[front].classList.remove('show');
+      front = 1 - front;
+      light.style.setProperty('--lx', seg.lx);
+      light.style.setProperty('--ly', seg.ly);
+    });
+  }
 
   // 场景可配：hele 四段轮替 / gongle 单张宫乐图
   window.__setIntro = function (sc) {
     if (timer) { clearInterval(timer); timer = null; }
-    if (sc.introBg.mode === 'cycle') {
-      const segs = sc.introBg.segs;
-      let idx = 0;
-      bg.style.backgroundImage = `url('assets/${segs[0].img}')`;
-      light.style.setProperty('--lx', segs[0].lx);
-      light.style.setProperty('--ly', segs[0].ly);
-      timer = setInterval(() => {
-        idx = (idx + 1) % segs.length;
-        bg.style.backgroundImage = `url('assets/${segs[idx].img}')`;
-        light.style.setProperty('--lx', segs[idx].lx);
-        light.style.setProperty('--ly', segs[idx].ly);
-      }, 4500);
-    } else {
-      bg.style.backgroundImage = `url('${sc.introBg.img}')`;
-      light.style.setProperty('--lx', sc.introBg.lx);
-      light.style.setProperty('--ly', sc.introBg.ly);
-    }
+    const segs = (sc.introBg.mode === 'cycle') ? sc.introBg.segs : [sc.introBg];
+    let idx = 0;
+    showSeg(segs[0]);
+    timer = setInterval(() => {
+      idx = (idx + 1) % segs.length;
+      showSeg(segs[idx]);
+    }, 4500);
   };
 
   intro.addEventListener('pointermove', (e) => {
@@ -1794,8 +1909,8 @@ const cur = () => SCENES[sceneKey];
 const SCENES = {
   hele: {
     key: 'hele',
-    img: 'assets/ticket-art.jpg',        // 票根 / 撕票放大图
-    scrollImg: 'assets/scroll.jpg',      // 展卷画
+    img: 'assets/scroll.webp',        // 票根 / 撕票放大图
+    scrollImg: 'assets/scroll.webp',      // 展卷画
     title: '合乐图 · 唐音入画',
     ticketName: '合乐图',
     ticketSub: '唐音入画 · 五代周文矩',
@@ -1805,10 +1920,10 @@ const SCENES = {
     introSub: '唐音入画 · 合乐图',
     introDesc: '传五代南唐·周文矩绘　美国芝加哥美术馆藏<br>画卷之上，十数乐伎依序而奏。<br>移动光标，于绢本光影间寻访十一器。',
     introBg: { mode: 'cycle', segs: [
-      { img: 'intro_seg0.jpg', lx: '70%', ly: '55%' },
-      { img: 'intro_seg1.jpg', lx: '45%', ly: '55%' },
-      { img: 'intro_seg2.jpg', lx: '35%', ly: '50%' },
-      { img: 'intro_seg3.jpg', lx: '50%', ly: '55%' }
+      { img: 'intro_seg0.webp', lx: '70%', ly: '55%' },
+      { img: 'intro_seg1.webp', lx: '45%', ly: '55%' },
+      { img: 'intro_seg2.webp', lx: '35%', ly: '50%' },
+      { img: 'intro_seg3.webp', lx: '50%', ly: '55%' }
     ] },
     toolbar: '滚轮 / 拖动横向展卷 · 点击朱砂墨点进入乐器',
     emperor: {
@@ -1992,8 +2107,8 @@ const SCENES = {
   },
   gongle: {
     key: 'gongle',
-    img: 'assets/gongle.jpg',            // 票根 / 撕票放大图（宫乐图）
-    scrollImg: 'assets/gongle.jpg',      // 展卷画
+    img: 'assets/gongle.webp',            // 票根 / 撕票放大图（宫乐图）
+    scrollImg: 'assets/gongle.webp',      // 展卷画
     title: '宫乐图 · 唐音入画',
     ticketName: '宫乐图',
     ticketSub: '唐音入画 · 唐人宫乐图',
@@ -2002,7 +2117,7 @@ const SCENES = {
     introTitle: '中国古画中的民乐',
     introSub: '唐音入画 · 唐人宫乐图',
     introDesc: '传唐·佚名　绢本设色<br>仕女围坐方桌，宴饮奏乐，闲适雍容。<br>移动光标，于绢本光影间寻访五器。',
-    introBg: { mode: 'single', img: 'assets/gongle.jpg', lx: '50%', ly: '45%' },
+    introBg: { mode: 'single', img: 'assets/gongle.webp', lx: '50%', ly: '45%' },
     toolbar: '滚轮 / 拖动横向展卷 · 点击朱砂墨点进入乐器',
     emperor: null,
     instruments: [
@@ -2116,9 +2231,15 @@ function activateScene(key) {
   // 乐器介绍背景：宫乐图用宫乐图本幅，其余保持原样
   const vd = document.getElementById('view-detail');
   if (vd) vd.classList.toggle('view-detail--gongle', sc.key === 'gongle');
-  // 展卷画卷图
+  // 展卷画卷图：占位 → 解码 → 淡入，并重算横向滚动边界
   const pimg = document.getElementById('paintingImg');
-  if (pimg) { pimg.src = sc.scrollImg; pimg.alt = src.ticketName + (lang === 'en' ? ' (whole scroll)' : '（整卷）'); }
+  if (pimg) {
+    pimg.alt = src.ticketName + (lang === 'en' ? ' (whole scroll)' : '（整卷）');
+    if (pimg.getAttribute('src') !== sc.scrollImg) pimg.src = sc.scrollImg;
+    __loadImg(pimg, document.getElementById('painting'), sc.key, () => {
+      if (window.__recalcScroll) window.__recalcScroll();
+    });
+  }
   // 热点 / 索引重渲
   const painting = document.getElementById('painting');
   if (painting) { painting.querySelectorAll('.hotspot').forEach(h => h.remove()); renderHotspots(); }
@@ -2206,8 +2327,14 @@ function switchSceneWithRoll(targetKey) {
       }
       setTimeout(() => { isSwitching = false; }, 80);
     };
-    if (pimg && !pimg.complete) pimg.addEventListener('load', done, { once: true });
-    else done();
+    // 卷轴展开不等死图：加载/失败/8 秒超时三保险，任何一条先到都继续，交互永不卡死
+    if (pimg && !pimg.complete) {
+      let settled = false;
+      const once = () => { if (settled) return; settled = true; done(); };
+      pimg.addEventListener('load', once, { once: true });
+      pimg.addEventListener('error', once, { once: true });
+      setTimeout(once, 8000);
+    } else done();
   }, 620);
 }
 function updateSwitchUI() {
@@ -2381,6 +2508,8 @@ function zoomable(stage, contentEl, contain, minScale) {
   fit();
   // 下一帧布局完成后再 fit 一次，兜底初始化时舞台尺寸为 0 的情况
   requestAnimationFrame(() => requestAnimationFrame(() => fit()));
+  // 乐器大图后到：naturalWidth 就绪后重算基准尺寸并复位，避免显示为 0/错位
+  if (img && !img.complete) img.addEventListener('load', () => fit(), { once: true });
   return {
     zoomIn: () => zoomAt(1.3, viewW / 2, viewH / 2),
     zoomOut: () => zoomAt(1 / 1.3, viewW / 2, viewH / 2),
@@ -2526,9 +2655,9 @@ function buildCardHTML(it) {
     + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' + t.exit + '</button>'
     + '</div>'
     + '<div class="detail-zoom"><div class="detail-canvas">'
-    + '<div class="detail-content">' + (isGongle
-        ? '<div class="attached-card"><img src="assets/' + it.id + '.png" alt="' + it.full + '" draggable="false"></div>'
-        : '<img src="assets/' + it.id + '.png" alt="' + it.full + '">') + '</div>'
+    + '<div class="detail-content" data-lqip="' + it.id + '">' + (isGongle
+        ? '<div class="attached-card"><img src="assets/' + it.id + '.webp" alt="' + it.full + '" decoding="async" draggable="false"></div>'
+        : '<img src="assets/' + it.id + '.webp" alt="' + it.full + '" decoding="async" draggable="false">') + '</div>'
     + '</div><span class="detail-zoom-hint">' + t.zoomHint + '</span></div>'
     + '<div class="card-head"><h2>' + it.full + '</h2><span class="instrument-tag">' + it.tag + '</span></div>'
     + '<p class="instrument-desc">' + it.desc + '</p>'
@@ -2571,6 +2700,10 @@ function renderDetail(id) {
     if (zout) zout.addEventListener('click', ctrl.zoomOut);
     if (zfit) zfit.addEventListener('click', ctrl.fit);
   } catch (e) {}
+  // 乐器大图：LQIP 占位 + 解码淡入，就绪后重算缩放基准
+  const dContent = card.querySelector('.detail-content');
+  const dImg = card.querySelector('.detail-content img');
+  if (dContent && dImg) __loadImg(dImg, dContent, it.id);
   // 淡入（最初形式）
   gsap.fromTo(card, { autoAlpha: 0, y: 16, filter: 'blur(8px)' }, { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out', onComplete: () => gsap.set(card, { clearProps: 'filter' }) });
   const navEl = wrap.querySelector('.detail-nav');
@@ -2630,12 +2763,7 @@ document.addEventListener("click", (e) => {
 });
 
 /* ============ 开场帷幕 ============ */
-window.addEventListener('load', () => {
-  const curtain = document.getElementById('curtain');
-  if (!curtain) return;
-  setTimeout(() => curtain.classList.add('open'), 400);
-  setTimeout(() => curtain.remove(), 2200);
-});
+/* 帷幕改由加载界面结束时触发（见文件底部），不再死等 window.load，避免慢网下长时间黑屏 */
 
 route();
 
@@ -2961,22 +3089,57 @@ activateScene(sceneKey);
   mo.observe(document.body, { childList: true, subtree: true });
 })();
 
-/* ===== 加载界面：等网页全部资源 + 字体加载完整后淡出 ===== */
+/* ===== 加载界面：首屏画卷解码 + 字体就绪即淡出（不空等全部资源） ===== */
 (function () {
   const finish = () => {
     const l = document.getElementById('loader');
     if (!l || l.classList.contains('loader--done')) return;
     l.classList.add('loader--done');
     setTimeout(() => { const el = document.getElementById('loader'); if (el) el.remove(); }, 700);
+    // 帷幕与 loader 无缝衔接：加载结束即开幕，慢网不再黑屏等待
+    const curtain = document.getElementById('curtain');
+    if (curtain) {
+      setTimeout(() => {
+        curtain.classList.add('open');
+        setTimeout(() => { if (curtain.parentNode) curtain.remove(); }, 2200);
+      }, 150);
+    }
   };
-  if (document.readyState === 'complete') {
-    Promise.all([document.fonts.ready]).then(() => setTimeout(finish, 250));
-  } else {
-    window.addEventListener('load', () => {
-      Promise.all([document.fonts.ready]).then(() => setTimeout(finish, 250));
-    });
+  const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(r, ms))]);
+  const paintingImg = document.getElementById('paintingImg');
+  const paintingReady = paintingImg
+    ? __loadImg(paintingImg, document.getElementById('painting'), 'hele')
+    : Promise.resolve(true);
+  const fontsReady = withTimeout((document.fonts && document.fonts.ready) || Promise.resolve(), 2500);
+  withTimeout(Promise.all([paintingReady, fontsReady]), 6500).then(() => setTimeout(finish, 250));
+  setTimeout(finish, 9000); // 兜底：极端情况下最多 9s
+})();
+
+/* ===== 空闲预取：另一幅画卷 / intro 分段 / 全部乐器大图，进入详情与换画零等待 ===== */
+(function () {
+  const urls = ['assets/gongle.webp',
+    'assets/intro_seg0.webp', 'assets/intro_seg1.webp', 'assets/intro_seg2.webp', 'assets/intro_seg3.webp'];
+  [SCENES.hele, SCENES.gongle].forEach(sc =>
+    (sc.instruments || []).forEach(it => urls.push('assets/' + it.id + '.webp')));
+  const queue = [...new Set(urls)];
+  let i = 0;
+  function step(deadline) {
+    // 每个空闲切片取几张，不与交互抢主线程
+    const take = deadline && deadline.timeRemaining ? Math.max(1, Math.floor(deadline.timeRemaining() / 6)) : 2;
+    for (let k = 0; k < take && i < queue.length; k++, i++) {
+      const im = new Image();
+      im.decoding = 'async';
+      im.src = queue[i];
+    }
+    if (i < queue.length) schedule();
   }
-  setTimeout(finish, 14000); // 兜底：极端情况下最多展示 14s
+  function schedule() {
+    if ('requestIdleCallback' in window) requestIdleCallback(step, { timeout: 30000 });
+    else setTimeout(() => step(null), 400);
+  }
+  const start = () => setTimeout(schedule, 2500); // 首屏稳定后再后台预取
+  if (document.readyState === 'complete') start();
+  else window.addEventListener('load', start, { once: true });
 })();
 </script>
 <script src="assets/koi-school.js"></script>

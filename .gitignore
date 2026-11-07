@@ -1,0 +1,14 @@
+# 临时工作目录与验证产物（不推入 GitHub Pages）
+_work/
+_pptwork/
+_verify/
+
+# 本地截图/临时 HTML 与浏览器 profile
+_shot*.html
+_*.html
+_edgeprofile*/
+
+# 系统与编辑器
+Thumbs.db
+.DS_Store
+*.log
