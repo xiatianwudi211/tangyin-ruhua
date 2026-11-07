@@ -1419,7 +1419,8 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   display: flex; align-items: center; justify-content: center;
   gap: 48px;
   pointer-events: none; opacity: 0;
-  transition: opacity .4s ease;
+  /* opacity 由票根入场引擎按 Folder intro 的 appear = 1-(1-t)^3 逐帧写入 */
+  transition: none;
 }
 .tt-pop.show { opacity: 1; pointer-events: auto; }
 .tt {
@@ -1435,14 +1436,14 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   position: relative; width: var(--tt-w); height: var(--tt-h);
   color: var(--tt-ink);
   user-select: none; -webkit-user-select: none;
-  /* 从文件夹口「抽出」：小尺寸 + 下方位移 + 轻微歪斜；两张票错峰浮出（spread 相位） */
+  /* 入场位姿由 ticketIntro 的 240Hz 弹簧逐帧写入（Folder intro 相位机）；CSS 仅作无 JS 兜底 */
   opacity: 0;
   transform: translateY(74px) scale(.4);
-  transition: transform .84s cubic-bezier(.16,1.12,.3,1), opacity .48s ease;
+  transition: none;
   will-change: transform, opacity;
 }
 .tt-pop .tt:nth-child(1) { transform: translateY(74px) scale(.4) rotate(-6deg); }
-.tt-pop .tt:nth-child(2) { transform: translateY(88px) scale(.4) rotate(6deg); transition-delay: .13s; }
+.tt-pop .tt:nth-child(2) { transform: translateY(88px) scale(.4) rotate(6deg); }
 .tt-pop.show .tt,
 .tt-pop.show .tt:nth-child(1),
 .tt-pop.show .tt:nth-child(2) { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
@@ -3068,15 +3069,21 @@ route();
   const TAU = Math.PI * 2, STEP = 1 / 240;
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const spring = v => ({ value: v, velocity: 0 });
-  const ANGLE = { rest: 0, peek: -15, open: -64, intro: -30 };
+  const ANGLE = { rest: 0, peek: -15, open: -64, intro: -42 };
   const BOUNCE = 0.4, TILT = 0.5;
+  /* 对齐 Folder 的 intro 时序：closeAt = (0.16 + count*0.085 + 0.3) / speed */
+  const INTRO_SPEED = 1, TT_COUNT = 2;
+  const CLOSE_AT = (0.16 + TT_COUNT * 0.085 + 0.3) / INTRO_SPEED;
+  const APPEAR_AT = 0.34 / INTRO_SPEED;
 
   const S = {
     raf: 0, last: 0, hovered: false, pressed: false, opened: false,
-    px: 0, py: 0, introDone: false, introT0: 0,
+    px: 0, py: 0,
+    intro: { phase: 'wait', start: 0 },   // wait → run → done（Folder intro 相位机）
+    appear: reduce ? 1 : 0,
     front: spring(reduce ? ANGLE.rest : ANGLE.intro),
     rx: spring(0), ry: spring(0), lift: spring(0),
-    squash: spring(1), anchor: spring(0), appear: spring(reduce ? 1 : 0)
+    squash: spring(1), anchor: spring(0)
   };
 
   /* 240Hz 子步积分：高帧率与大 dt 下都稳定，不会像 CSS 缓动那样跳帧 */
@@ -3097,7 +3104,7 @@ route();
   }
 
   function write() {
-    const zoom = (1 + S.lift.value * 0.012) * S.squash.value * (0.94 + 0.06 * S.appear.value);
+    const zoom = (1 + S.lift.value * 0.012) * S.squash.value * (0.94 + 0.06 * clamp(S.appear, 0, 1));
     /* perspective() 写在 transform 里只作用于 stage 自身姿态；CSS perspective 属性仍作用于子层前盖 */
     stage.style.transform = 'perspective(1400px) rotateX(' + S.rx.value.toFixed(3) + 'deg) rotateY('
       + S.ry.value.toFixed(3) + 'deg) scale(' + zoom.toFixed(4) + ')';
@@ -3112,7 +3119,7 @@ route();
 
     /* 打开后文件夹整体下沉淡出（原 CSS 的 .35 / 26px / .92 改由弹簧连续驱动） */
     const anchor = clamp(S.anchor.value, 0, 1);
-    root.style.opacity = ((1 - 0.65 * anchor) * clamp(S.appear.value, 0, 1)).toFixed(3);
+    root.style.opacity = ((1 - 0.65 * anchor) * clamp(S.appear, 0, 1)).toFixed(3);
     root.style.transform = 'translateY(' + (26 * anchor).toFixed(2) + 'px) scale('
       + (1 - 0.08 * anchor).toFixed(4) + ')';
     if (cast) {
@@ -3127,29 +3134,40 @@ route();
     const dt = S.last ? Math.min(0.05, (now - S.last) / 1000) : 1 / 60;
     S.last = now;
 
-    /* 帷幕（loader）尚未落幕时保持入场初始姿态，避免动画在不可见时白跑 */
-    if (!S.introDone && !reduce && document.getElementById('loader')) {
-      write();
-      S.raf = requestAnimationFrame(frame);
-      return;
+    /* intro 相位：wait（帷幕未落幕）→ run（staged 掀盖 + 淡入）→ done */
+    const I = S.intro;
+    if (I.phase === 'wait' && !reduce) {
+      if (document.getElementById('loader')) {
+        write();
+        S.raf = requestAnimationFrame(frame);
+        return;
+      }
+      I.phase = 'run';
+      I.start = now / 1000;
+    } else if (I.phase !== 'run') {
+      S.appear = 1;
     }
 
     const zeta = reduce ? 1 : 1 - 0.72 * BOUNCE;
     const frontOmega = TAU * 2, softOmega = TAU * 1.6;
     let busy = false;
-
-    /* intro：先掀开 0.34s，再弹回 rest/peek，同时淡入 */
     let target = ANGLE[phase()];
-    if (!S.introDone && !reduce) {
-      if (!S.introT0) S.introT0 = now;
-      const t = (now - S.introT0) / 1000;
-      if (t < 0.34) target = ANGLE.intro;
-      if (t > 0.92) S.introDone = true;
+
+    if (I.phase === 'run') {
+      const t = now / 1000 - I.start;
+      /* 与 Folder 的 holding 一致：错峰落位期间保持掀盖，之后合盖 */
+      if (t < CLOSE_AT) target = ANGLE.intro;
+      S.appear = 1 - Math.pow(1 - clamp(t / APPEAR_AT, 0, 1), 3);
+      if (t > CLOSE_AT + 0.7 / INTRO_SPEED) I.phase = 'done';
       busy = true;
-    } else S.introDone = true;
+    }
 
     busy = integrate(S.front, target, frontOmega, zeta, dt) || busy;
-    busy = integrate(S.appear, 1, TAU * 1.2, 1, dt) || busy;
+    /* 翻盖撞到闭合面时按 Folder 的 restitution 回弹，避免弹簧过冲成反向翻折 */
+    if (!S.opened && S.front.value > 0) {
+      S.front.value = -S.front.value;
+      S.front.velocity = -S.front.velocity * (0.2 + 0.35 * BOUNCE);
+    }
     busy = integrate(S.anchor, S.opened ? 1 : 0, frontOmega, 1, dt) || busy;
 
     const engaged = S.hovered && !S.opened && !reduce;
@@ -3168,7 +3186,8 @@ route();
     if (S.opened) return;
     S.opened = true;
     S.hovered = false;
-    S.introDone = true;
+    S.intro.phase = 'done';
+    S.appear = 1;
     root.setAttribute('data-open', '');
     stage.setAttribute('aria-expanded', 'true');
     wake();
@@ -3186,7 +3205,7 @@ route();
     if (!r.width) return;
     S.px = clamp((e.clientX - (r.left + r.width / 2)) / (r.width / 2), -1, 1);
     S.py = clamp((e.clientY - (r.top + r.height / 2)) / (r.height / 2), -1, 1);
-    if (!S.hovered) { S.hovered = true; S.introDone = true; }
+    if (!S.hovered) { S.hovered = true; S.intro.phase = 'done'; S.appear = 1; }
     wake();
   }, { passive: true });
   stage.addEventListener('pointerleave', function () {
@@ -3194,7 +3213,7 @@ route();
     S.hovered = false; S.px = 0; S.py = 0;
     wake();
   });
-  stage.addEventListener('pointerdown', function () { S.pressed = true; S.introDone = true; wake(); });
+  stage.addEventListener('pointerdown', function () { S.pressed = true; S.intro.phase = 'done'; S.appear = 1; wake(); });
   window.addEventListener('pointerup', function () {
     if (S.pressed) { S.pressed = false; wake(); }
   });
@@ -3692,6 +3711,127 @@ route();
   [SCENES.hele, SCENES.gongle].forEach(function (sc) { ttPop.appendChild(buildTicket(sc)); });
 
   /* 票根显隐由文件夹弹簧引擎在翻盖掀到一半时触发（folder:open / ttPop.show） */
+})();
+
+/* ============ 票根出场：Folder intro 相位机 + 240Hz 弹簧（flap / spread） ============
+   与文件夹共用同一套运动模型：wait → run → done；逆序错峰 dropAt(rank)、
+   introPose（上方偏移 + 交替倾角 + 略放大 + alpha 0）、落地速度回弹、
+   appear = 1-(1-t)^3 整体缓入。仅改运动，不改颜色 / 文字 / 图片。 */
+(function ticketIntro() {
+  const pop = document.getElementById('ttPop');
+  if (!pop) return;
+  const nodes = Array.prototype.slice.call(pop.querySelectorAll('.tt'));
+  if (!nodes.length) return;
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2, STEP = 1 / 240;
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const spring = v => ({ value: v, velocity: 0 });
+  const SPEED = 1, BOUNCE = 0.4;
+  const count = nodes.length;
+  const APPEAR_AT = 0.34 / SPEED;
+  /* Folder: dropAt(rank) = (0.16 + (count-1-rank)*0.085) / speed —— 逆序逐张落下 */
+  const dropAt = rank => (0.16 + (count - 1 - rank) * 0.085) / SPEED;
+  const DONE_AT = (0.16 + count * 0.085 + 0.3) / SPEED + 0.9;
+  const REST = { x: 0, y: 0, r: 0, s: 1, alpha: 1 };
+
+  /* Folder 的 introPose：落位前先抬高、加交替倾角、略放大，且完全透明 */
+  function introPose(rank) {
+    return {
+      x: rank % 2 ? 14 : -14,
+      y: -124 - (count - 1 - rank) * 22,
+      r: (rank % 2 ? 7 : -7) + (rank % 2 ? 9 : -7),
+      s: 1.12,
+      alpha: 0
+    };
+  }
+
+  const I = {
+    raf: 0, last: 0, phase: 'wait', start: 0,
+    items: nodes.map((node, rank) => ({
+      node: node, rank: rank,
+      x: spring(0), y: spring(0), r: spring(0), s: spring(1), alpha: spring(1)
+    }))
+  };
+
+  /* 240Hz 子步半隐式欧拉，与文件夹引擎同一套积分器 */
+  function integrate(item, target, omega, zeta, dt) {
+    const k = omega * omega, d = 2 * zeta * omega;
+    const steps = Math.max(1, Math.ceil(dt / STEP)), step = dt / steps;
+    for (let i = 0; i < steps; i++) {
+      item.velocity += (k * (target - item.value) - d * item.velocity) * step;
+      item.value += item.velocity * step;
+    }
+    return Math.abs(target - item.value) > 0.01 || Math.abs(item.velocity) > 0.01;
+  }
+  function snap(item, v) { item.value = v; item.velocity = 0; }
+  function pose(item, p) {
+    snap(item.x, p.x); snap(item.y, p.y); snap(item.r, p.r);
+    snap(item.s, p.s); snap(item.alpha, p.alpha);
+  }
+
+  function write() {
+    I.items.forEach(it => {
+      it.node.style.transform = 'translate3d(' + it.x.value.toFixed(2) + 'px,' + it.y.value.toFixed(2)
+        + 'px,0) scale(' + it.s.value.toFixed(4) + ') rotate(' + it.r.value.toFixed(3) + 'deg)';
+      it.node.style.opacity = clamp(it.alpha.value, 0, 1).toFixed(3);
+    });
+  }
+
+  /* 先写入入场位姿：此后 .tt-pop.show 的 CSS 终态不会造成一帧闪现 */
+  I.items.forEach(it => pose(it, introPose(it.rank)));
+  write();
+
+  function settle() {
+    I.phase = 'done';
+    I.items.forEach(it => { it.node.style.transform = ''; it.node.style.opacity = ''; });
+    pop.style.opacity = '';
+  }
+
+  function frame(now) {
+    I.raf = 0;
+    const dt = I.last ? Math.min(0.05, (now - I.last) / 1000) : 1 / 60;
+    I.last = now;
+    const t = now / 1000 - I.start;
+    let busy = t < DONE_AT;
+
+    /* Folder 的整体淡入：appear = 1 - (1 - t / 0.34)^3 */
+    pop.style.opacity = (1 - Math.pow(1 - clamp(t / APPEAR_AT, 0, 1), 3)).toFixed(3);
+
+    const zeta = 1 - 0.72 * BOUNCE;
+    const omega = TAU * 2.1 * SPEED;
+    const alphaOmega = TAU * 3 * SPEED;
+    I.items.forEach(it => {
+      const staged = t < dropAt(it.rank);
+      const target = staged ? introPose(it.rank) : REST;
+      busy = integrate(it.x, target.x, omega, zeta, dt) || busy;
+      busy = integrate(it.y, target.y, omega, zeta, dt) || busy;
+      busy = integrate(it.r, target.r, omega, zeta, dt) || busy;
+      busy = integrate(it.s, target.s, omega, zeta, dt) || busy;
+      busy = integrate(it.alpha, target.alpha, alphaOmega, 1, dt) || busy;
+      /* Folder 的落地约束：越过静止面即夹住，并按 -0.25 给一点回弹 */
+      if (!staged && it.y.value > REST.y) {
+        it.y.value = REST.y;
+        if (it.y.velocity > 0) it.y.velocity *= -0.25;
+      }
+      if (staged) busy = true;
+    });
+    write();
+    if (busy) I.raf = requestAnimationFrame(frame);
+    else { I.last = 0; settle(); }
+  }
+
+  function begin() {
+    if (I.phase !== 'wait') return;
+    if (reduce) { settle(); I.phase = 'done'; return; }
+    I.phase = 'run';
+    I.start = performance.now() / 1000;
+    I.last = 0;
+    I.raf = requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('folder:open', begin);
+  if (pop.classList.contains('show')) begin();
 })();
 
 // 初始化默认场景（合乐图）：重渲热点/索引并配置开始界面背景
