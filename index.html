@@ -386,19 +386,21 @@ a { color: var(--qing-deep); text-decoration: none; }
 }
 .scroll-switch button {
   font-family: var(--font-serif);
-  /* 竖排题签：仿手卷卷首题签，签头金线 + 签底朱印点 */
+  /* 竖排题签：无描边金线，仅以纸色与柔和投影分出层次 */
   writing-mode: vertical-rl;
   font-size: 13px;
   letter-spacing: 3px;
   color: #3a332a;
-  background: linear-gradient(180deg, #f8f2e6 0%, #efe4cd 100%);
-  border: 1px solid #b3a184;
-  border-top: 3px solid #b98c3e;
-  padding: 15px 7px 16px;
+  background: linear-gradient(180deg, rgba(249,244,233,.96) 0%, rgba(238,228,209,.96) 100%);
+  border: 0;
+  padding: 15px 8px 16px;
   min-height: 122px;
   border-radius: 2px 2px 5px 5px;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(20,12,4,.32), inset 0 1px 0 rgba(255,255,255,.65);
+  box-shadow:
+    0 5px 14px rgba(20,12,4,.26),
+    0 1px 2px rgba(20,12,4,.16),
+    inset 0 1px 0 rgba(255,255,255,.7);
   position: relative;
 }
 .scroll-switch button::after {
@@ -413,9 +415,12 @@ a { color: var(--qing-deep); text-decoration: none; }
   transition: background-color .28s ease;
 }
 .scroll-switch button.active {
-  color: #ffffff;
-  background: linear-gradient(180deg, #c69a49 0%, #a87e32 100%);
-  border-color: #a87e32;
+  color: #fffaf0;
+  background: linear-gradient(180deg, #b58a3d 0%, #8f6f2f 100%);
+  box-shadow:
+    0 7px 18px rgba(20,12,4,.34),
+    0 1px 2px rgba(20,12,4,.2),
+    inset 0 1px 0 rgba(255,255,255,.18);
 }
 .scroll-switch button.active::after { background: #a83a2e; box-shadow: inset 0 0 0 1px rgba(253,244,239,.65); }
 .scroll-switch button {
@@ -455,6 +460,11 @@ body.scene-switching .scroll-switch button { pointer-events: none; opacity: .55;
   background: #b98c3e;
   border-color: #b98c3e;
 }
+/* 部分浏览器 / 扩展会向按钮注入高光 canvas，重绘异常时会变成白色方块（切语言时最明显）：一律不显示 */
+.lang-toggle canvas,
+.scroll-switch button canvas,
+button > canvas,
+a > canvas { display: none !important; }
 
 /* ===== 热点：墨迹晕开（随画卷缩放保持对齐） ===== */
 /* ===== 热点：展厅射灯光点 ===== */
@@ -1460,6 +1470,10 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   background: linear-gradient(90deg, transparent, rgba(185,140,62,.7), transparent);
 }
 .welcome__hint { font-size: 13px; letter-spacing: 4px; color: #9a8968; margin-top: -4px; }
+/* 英文模式：中文式大字距会把拉丁字母拉散，收紧到适宜阅读的节奏 */
+html[lang="en"] .welcome__title { letter-spacing: .16em; font-size: 20px; }
+html[lang="en"] .welcome__hint { letter-spacing: .14em; font-size: 11.5px; }
+html[lang="en"] .folder-tab-text { letter-spacing: 1px; font-size: calc(11px * var(--folder-scale)); }
 
 /* ===== Folder 组件国风版（flap · solid，国风深木赭石） ===== */
 .folder-root {
@@ -1500,6 +1514,8 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
   position: absolute; top: 0; left: var(--folder-tab-x); width: var(--folder-tab-w); height: var(--folder-tab-h);
   display: flex; align-items: center; justify-content: center;
   color: #f0e2c6; font-size: calc(12px * var(--folder-scale)); font-weight: 600; letter-spacing: 4px;
+  /* 标签恒为单行：英文文案过长时不以第二行顶出签头 */
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
 }
 .folder-cast {
   position: absolute; left: 3%; width: 94%; height: 16px; bottom: -12px; border-radius: 50%;
@@ -2035,6 +2051,8 @@ function __loadImg(img, holder, lqipKey, onReady) {
   // 场景可配：hele 四段轮替 / gongle 单张宫乐图
   window.__setIntro = function (sc) {
     if (timer) { clearInterval(timer); timer = null; }
+    // 已进入画卷视图（开始界面已移除）：不再后台轮播大图，避免无谓解码与残影
+    if (!intro || !intro.parentNode) return;
     const segs = (sc.introBg.mode === 'cycle') ? sc.introBg.segs : [sc.introBg];
     let idx = 0;
     showSeg(segs[0]);
@@ -2085,6 +2103,7 @@ const I18N = {
   zh: {
     welcomeSeal: '觀樂',
     welcomeTitle: '观乐指引',
+    folderLabel: '观乐指引',
     welcomeHint: '点击文件夹 · 取出观乐券',
     introStart: '开始观赏',
     introHint: '移動光標 · 照亮畫卷',
@@ -2104,6 +2123,7 @@ const I18N = {
   en: {
     welcomeSeal: 'GUIDE',
     welcomeTitle: 'Guide to the Music',
+    folderLabel: 'Guide',
     welcomeHint: 'Click the folder · Take a ticket',
     introStart: 'Begin the Tour',
     introHint: 'Move the cursor · Illuminate the scroll',
@@ -2599,10 +2619,10 @@ function activateScene(key) {
 function updateStatic() {
   const t = I18N[lang];
   document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
-  const ws = document.querySelector('.welcome__seal'); if (ws) ws.textContent = t.welcomeSeal;
+  const ws = document.querySelector('.welcome__seal'); if (ws) ws.textContent = '觀樂';   // 朱印恒用中文，如卷首藏印
   const wt = document.querySelector('.welcome__title'); if (wt) wt.textContent = t.welcomeTitle;
   const wh = document.querySelector('.welcome__hint'); if (wh) wh.textContent = t.welcomeHint;
-  const fb = document.querySelector('.folder-tab-text'); if (fb) fb.textContent = t.welcomeTitle;
+  const fb = document.querySelector('.folder-tab-text'); if (fb) fb.textContent = t.folderLabel;
   const ib = document.querySelector('#intro-start .sb-label'); if (ib) ib.textContent = t.introStart;
   const ih = document.getElementById('intro-hint'); if (ih) ih.textContent = t.introHint;
   const ph = document.querySelector('.pan-hint'); if (ph) ph.textContent = t.panHint;
@@ -2629,19 +2649,61 @@ function updateWelcomeTickets() {
     if (nm) nm.textContent = I18N[lang].cardName;
   });
 }
+/* 语言切换只刷新文案与热点：不重载画卷图、不重启开始界面轮替，避免任何闪白 */
+function refreshSceneText() {
+  const sc = SCENES[sceneKey];
+  if (!sc) return;
+  const src = (lang === 'en' && sc.en) ? sc.en : sc;
+  instruments = sc.instruments.map((zhIt, i) => Object.assign({}, zhIt, (src.instruments && src.instruments[i]) || {}));
+  rebuildIndex();
+  document.title = src.title;
+  const pimg = document.getElementById('paintingImg');
+  if (pimg) pimg.alt = src.ticketName + (lang === 'en' ? ' (whole scroll)' : '（整卷）');
+  const painting = document.getElementById('painting');
+  if (painting) { painting.querySelectorAll('.hotspot').forEach(h => h.remove()); renderHotspots(); }
+  const grid = document.getElementById('indexGrid');
+  if (grid) { grid.innerHTML = ''; renderIndex(); }
+  const ic = document.getElementById('intro-content');
+  if (ic) {
+    const h1 = ic.querySelector('h1'); if (h1) h1.textContent = src.introTitle;
+    const sub = ic.querySelector('.sub'); if (sub) sub.textContent = src.introSub;
+    const desc = ic.querySelector('.desc'); if (desc) desc.innerHTML = src.introDesc;
+  }
+  const tb = document.querySelector('.toolbar--float .hint');
+  if (tb) tb.textContent = src.toolbar;
+  const sb = document.getElementById('scrollBrand');
+  if (sb) sb.textContent = sc.ticketName;
+  const ien = document.getElementById('introEn');
+  if (ien) ien.textContent = (lang === 'zh' && sc.en) ? sc.en.introSub : '';
+  updateSwitchUI();
+}
+
+function settleDetail() {
+  const c = document.querySelector('#detailWrap .instrument-card');
+  if (!c || typeof gsap === 'undefined') return;
+  gsap.killTweensOf(c);
+  gsap.set(c, { autoAlpha: 1, x: 0, y: 0, scale: 1 });
+}
+
 function applyLanguage() {
   updateStatic();
-  activateScene(sceneKey);
+  refreshSceneText();
+  const wrapD = document.getElementById('detailWrap');
+  if (wrapD) wrapD.dataset.swapping = '0';
   const m = location.hash.match(/^#\/instrument\/(\w+)/);
   if (m && byId[m[1]]) {
-    // 语言切换：重建当前乐器详情（新文案）
-    renderDetail(m[1]);
+    // 语言切换：原地静默重绘当前乐器卡（不播入场动画，避免 opacity 从 0 起跳留下空白帧）
+    renderDetail(m[1], 0, true);
+    // 兜底：把任何迟到的入场 tween 压回终态，绝不让卡片停在半透明
+    setTimeout(settleDetail, 60);
+    setTimeout(settleDetail, 520);
   }
   updateSwitchUI();
 }
 
 /* ============ 画卷间卷起/展开转场 ============ */
 let isSwitching = false;
+let pendingLang = null;   // 换画转场期间点的语言：等卷轴展开完再应用，避免打断转场
 const __preloadCache = new Map();
 function __preloadImage(src) {
   if (!src) return Promise.resolve(null);
@@ -2699,6 +2761,7 @@ function switchSceneWithRoll(targetKey) {
         setTimeout(() => {
           isSwitching = false;
           document.body.classList.remove('scene-switching');
+          if (pendingLang) { const l = pendingLang; pendingLang = null; lang = l; applyLanguage(); }
         }, openedMs);
       }, holdMs);
     });
@@ -2714,6 +2777,13 @@ const langToggle = document.getElementById('langToggle');
 if (langToggle) langToggle.addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   const l = b.getAttribute('data-lang'); if (!l || l === lang) return;
+  if (isSwitching) {
+    // 卷轴转场进行中：先记住选择并同步按钮态，等转场结束再统一刷新文案
+    pendingLang = l;
+    document.querySelectorAll('.lang-toggle button').forEach(x =>
+      x.classList.toggle('active', x.getAttribute('data-lang') === l));
+    return;
+  }
   lang = l;
   applyLanguage();
 });
@@ -3115,7 +3185,7 @@ function buildCardHTML(it) {
 
 /* 乐器详情：单卡 + 淡入淡出（最初形式，无纵深轮播）
    dir = ±1 时表示乐器间左右切换，入场交给 swapTo 统一处理 */
-function renderDetail(id, dir) {
+function renderDetail(id, dir, silent) {
   const it = byId[id];
   if (!it) { window.location.hash = '#/'; return; }
   const wrap = document.getElementById('detailWrap');
@@ -3154,7 +3224,14 @@ function renderDetail(id, dir) {
   const dImg = card.querySelector('.detail-content img');
   if (dContent && dImg) __loadImg(dImg, dContent, it.id);
   const navEl = wrap.querySelector('.detail-nav');
-  if (swap) {
+  if (silent) {
+    // 原地重绘（语言切换）：直接定格终态，绝不留透明/模糊的空白帧
+    if (typeof gsap !== 'undefined') {
+      gsap.killTweensOf(card);
+      gsap.set(card, { autoAlpha: 1, x: 0, y: 0, scale: 1, clearProps: 'filter,transform' });
+      if (navEl) gsap.set(navEl, { autoAlpha: 1, x: 0, y: 0 });
+    }
+  } else if (swap) {
     // 乐器左右切换：卡片入场由 swapTo 控制，导航条只做极轻的淡入
     if (navEl) gsap.fromTo(navEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, delay: 0.06 });
   } else {
