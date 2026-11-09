@@ -2619,7 +2619,7 @@ function activateScene(key) {
 function updateStatic() {
   const t = I18N[lang];
   document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
-  const ws = document.querySelector('.welcome__seal'); if (ws) ws.textContent = '觀樂';   // 朱印恒用中文，如卷首藏印
+  // 朱印恒为单字「樂」，属图形标识，不随语言改写（写两个字会在小方印里挤行）
   const wt = document.querySelector('.welcome__title'); if (wt) wt.textContent = t.welcomeTitle;
   const wh = document.querySelector('.welcome__hint'); if (wh) wh.textContent = t.welcomeHint;
   const fb = document.querySelector('.folder-tab-text'); if (fb) fb.textContent = t.folderLabel;
