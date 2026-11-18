@@ -88,8 +88,11 @@ body::before {
   inset: 0;
   z-index: 2850;
   pointer-events: none;
-  opacity: .05;
-  mix-blend-mode: overlay;
+  opacity: .04;
+  /* 原来用 overlay 混合：整屏都得当成混合底图重新合成，任何一处动画都会
+     触发全屏重混（切换卡顿的主因之一），且会跟 WebGL 层抢合成资源。
+     改用普通叠加，观感几乎一致，合成成本直接归零。 */
+  mix-blend-mode: normal;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 html, body { overflow: hidden; }
@@ -372,19 +375,40 @@ a { color: var(--qing-deep); text-decoration: none; }
   pointer-events: none;
 }
 /* 画卷间切换（合乐图 ↔ 宫乐图）：最简单的普通按钮，无动效 */
+/* 画卷间切换：题签沿弧线排布的「转盘」
+   位置（底部居中）、纸签形状、金色选中配色全部保持原样，
+   只叠加位置/倾角/浓淡/虚实 —— 参考 OptionWheel 的排布规律 */
+@property --sw-lift {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
 .scroll-switch {
   position: absolute;
   left: 50%;
   bottom: 16px;
-  transform: translateX(-50%);
+  width: 0;
+  height: 0;
   z-index: 61;
-  display: inline-flex;
-  gap: 6px;
-  padding: 0;
-  background: transparent;
-  border: 0;
+  pointer-events: none;
 }
+/* 定位壳：只负责弧线位移/倾角/浓淡；按钮自身的磁吸 transform 不受影响 */
+.sw-slot {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  transform-origin: 50% 100%;
+  will-change: transform, opacity, filter;
+  transform:
+    translate3d(calc(-50% + var(--sw-x, 0px)), calc(var(--sw-y, 0px) + var(--sw-lift, 0px)), 0)
+    rotate(var(--sw-r, 0deg));
+  opacity: calc(var(--sw-op, 1) * var(--sw-dim, 1));
+  pointer-events: none;
+}
+.sw-slot:hover:has(> .magnet > button:not(.active)),
+.sw-slot:hover:has(> button:not(.active)) { --sw-lift: -2px; }
 .scroll-switch button {
+  pointer-events: auto;
   font-family: var(--font-serif);
   /* 竖排题签：无描边金线，仅以纸色与柔和投影分出层次 */
   writing-mode: vertical-rl;
@@ -424,15 +448,15 @@ a { color: var(--qing-deep); text-decoration: none; }
 }
 .scroll-switch button.active::after { background: #a83a2e; box-shadow: inset 0 0 0 1px rgba(253,244,239,.65); }
 .scroll-switch button {
-  transition: background-color .28s ease, color .28s ease, border-color .28s ease, transform .28s cubic-bezier(.22,1,.36,1);
+  transition: background-color .28s ease, color .28s ease, border-color .28s ease, box-shadow .28s ease, --sw-lift .28s cubic-bezier(.22,1,.36,1);
 }
-.scroll-switch button:hover:not(.active) { background: #fbf6ea; transform: translateY(-2px); }
+.scroll-switch button:hover:not(.active) { background: #fbf6ea; }
 @media (max-width: 720px) {
-  .scroll-switch { gap: 7px; }
   .scroll-switch button { font-size: 11px; letter-spacing: 2px; min-height: 96px; padding: 11px 5px 12px; }
 }
 /* 换画过程中锁住切换按钮，避免连点打断卷轴 */
-body.scene-switching .scroll-switch button { pointer-events: none; opacity: .55; }
+body.scene-switching .scroll-switch { --sw-dim: .55; }
+body.scene-switching .scroll-switch button { pointer-events: none; }
 /* 中 / EN 语言切换：最简单的普通按钮，无动效 */
 .lang-toggle {
   position: fixed;
@@ -678,9 +702,24 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
     url('assets/yehongtu-bg.webp');
   background-size: auto 100%;
 }
-/* 详情页 = DepthCarousel 纵深轮播容器 */
+/* 详情页：叠在背景古画之上的绢本线波（绝对定位、不拦指针、不参与布局）
+   放在 detailWrap 之外，乐器切换只重写卡片，这层 canvas 从不重建 */
+.detail-waves {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.detail-waves canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* 详情页 = 单卡容器 */
 #detailWrap {
   position: relative;
+  z-index: 1;
   width: 100%;
   min-height: 100vh;
   box-sizing: border-box;
@@ -728,94 +767,6 @@ body.page-leaving { animation: scroll-away 0.42s cubic-bezier(0.4,0,0.2,1) forwa
 .detail-topbar .back-link svg,
 .detail-topbar .detail-close svg { width: 16px; height: 16px; }
 
-/* ---- DepthCarousel 纵深轮播（国风绢本配色） ---- */
-.dc-stage {
-  position: relative;
-  width: 100%;
-  min-height: min(82vh, 960px);
-  perspective: 1400px;
-  perspective-origin: 50% 50%;
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-  cursor: grab;
-  outline: none;
-}
-.dc-stage:active { cursor: grabbing; }
-.dc-stage:focus-visible { outline: 2px solid rgba(185,140,62,.5); outline-offset: 4px; border-radius: 12px; }
-.dc-stage-inner {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-}
-.dc-card {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform-origin: center center;
-  width: min(92vw, 860px);
-  will-change: transform, opacity, filter;
-  transform: translate(-50%, -50%);
-}
-.dc-card .instrument-card { border-radius: 20px; }
-.dc-tint {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  mix-blend-mode: multiply;
-  background: rgba(10,8,6,0.6);
-  border-radius: 20px;
-}
-.dc-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 3100;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(185,140,62,.45);
-  border-radius: 999px;
-  background: rgba(244,238,224,.72);
-  backdrop-filter: blur(6px);
-  color: var(--ink);
-  cursor: pointer;
-  transition: background .2s ease, border-color .2s ease, transform .2s ease;
-}
-.dc-arrow:hover { background: rgba(232,200,122,.28); border-color: rgba(185,140,62,.8); }
-.dc-arrow:active { transform: translateY(-50%) scale(.94); }
-.dc-arrow--prev { left: 8px; }
-.dc-arrow--next { right: 8px; }
-.dc-dots {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3100;
-  display: flex;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(244,238,224,.7);
-  backdrop-filter: blur(6px);
-}
-.dc-dot {
-  width: 7px;
-  height: 7px;
-  padding: 0;
-  border: none;
-  border-radius: 999px;
-  background: rgba(122,106,82,.4);
-  cursor: pointer;
-  transition: width .25s ease, background .25s ease;
-}
-.dc-dot.is-active { width: 22px; background: var(--cinnabar, #a83a2e); }
-@media (prefers-reduced-motion: reduce) {
-  .dc-card { will-change: auto; }
-  .dc-arrow, .dc-dot { transition: none; }
-}
 
 /* ---- SpecularButton 高光按钮（国风绢金高光，跟随鼠标） ---- */
 .specular {
@@ -1954,14 +1905,17 @@ button { -webkit-tap-highlight-color: transparent; }
   </div>
   <!-- 画卷间切换：合乐图 ↔ 宫乐图（卷起→换画→展开） -->
   <div class="scroll-switch" id="scrollSwitch" role="group" aria-label="切换画卷">
-    <button type="button" data-scene="gongle"><span data-i18n="switchGongle">赏 · 唐人宫乐</span></button>
-    <button type="button" data-scene="hele" class="active"><span data-i18n="switchHele">观 · 合乐长卷</span></button>
-    <button type="button" data-scene="yehongtu"><span data-i18n="switchYehongtu">夜 · 韩熙载夜宴</span></button>
+    <div class="sw-slot"><button type="button" data-scene="gongle"><span data-i18n="switchGongle">赏 · 唐人宫乐</span></button></div>
+    <div class="sw-slot"><button type="button" data-scene="hele" class="active"><span data-i18n="switchHele">观 · 合乐长卷</span></button></div>
+    <div class="sw-slot"><button type="button" data-scene="yehongtu"><span data-i18n="switchYehongtu">夜 · 韩熙载夜宴</span></button></div>
   </div>
 </section>
 
 <!-- ===== 乐器详情 ===== -->
 <section id="view-detail" class="view">
+  <div class="detail-waves" id="detailWaves" aria-hidden="true">
+    <canvas id="detailWavesCanvas"></canvas>
+  </div>
   <div class="detail-wrap" id="detailWrap"></div>
 </section>
 
@@ -2770,7 +2724,91 @@ function switchSceneWithRoll(targetKey) {
 function updateSwitchUI() {
   const btns = document.querySelectorAll('.scroll-switch button');
   btns.forEach(b => b.classList.toggle('active', b.getAttribute('data-scene') === sceneKey));
+  if (window.__swRefresh) window.__swRefresh();
 }
+
+/* ============ 画卷题签：沿弧线排布的「转盘」 ============
+   参考 OptionWheel 的排布规律 —— 中签端正居中，两侧题签按弧长外旋、
+   略微下沉、随距离变淡变虚；切换时以指数平滑（帧率无关）滚到新位置。
+   按钮的形状、配色、基线位置与点击热区一律不改。 */
+(function () {
+  const box = document.getElementById('scrollSwitch');
+  if (!box) return;
+  const btns = Array.prototype.slice.call(box.querySelectorAll('button'));
+  if (btns.length < 2) return;
+  const slots = btns.map(function (b) { return b.closest('.sw-slot') || b; });
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let pos = 0, target = 0, raf = 0, last = 0, ready = false;
+  let step = 40, tilt = 11;
+
+  // 用 offsetWidth（布局宽度）而非 getBoundingClientRect：
+  // 题签倾斜后外接矩形会变宽，若拿它算步距，每次切换疏密都会漂。
+  function measure() {
+    let w = 0;
+    for (let i = 0; i < btns.length; i++) w = Math.max(w, btns[i].offsetWidth);
+    const gap = window.innerWidth < 720 ? 7 : 6;
+    step = Math.max(w + gap, 24);
+    tilt = window.innerWidth < 720 ? 9.5 : 11;
+  }
+
+  // 圆弧半径取「一级步距 / 一级弧度」，使相邻两签的弧长恒等于一个步距：
+  // 于是 tilt 只控制卷曲的紧松，不改变题签原本的间距感。
+  function layout() {
+    const rad = tilt * Math.PI / 180;
+    const R = step / rad;
+    for (let i = 0; i < slots.length; i++) {
+      const el = slots[i];
+      const d = i - pos;
+      const dist = Math.abs(d);
+      const ang = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, d * rad));
+      el.style.setProperty('--sw-x', (R * Math.sin(ang)).toFixed(2) + 'px');
+      el.style.setProperty('--sw-y', (R * (1 - Math.cos(ang)) * 0.5).toFixed(2) + 'px');
+      el.style.setProperty('--sw-r', (ang * 180 / Math.PI).toFixed(2) + 'deg');
+      el.style.setProperty('--sw-op', Math.max(0.42, 1 - dist * 0.22).toFixed(3));
+      // 近处不挂 filter，避免 blur(0) 触发栅格化把题签文字糊掉
+      el.style.filter = dist > 0.06 ? 'blur(' + (Math.min(dist, 2) * 1.05).toFixed(2) + 'px)' : '';
+    }
+  }
+
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    const k = 1 - Math.exp(-dt / 0.2);
+    let next = pos + (target - pos) * k;
+    const settled = Math.abs(target - next) < 0.0015;
+    if (settled) next = target;
+    pos = next;
+    layout();
+    raf = settled ? 0 : requestAnimationFrame(frame);
+  }
+
+  function refresh() {
+    let idx = -1;
+    for (let i = 0; i < btns.length; i++) {
+      if (btns[i].classList.contains('active')) { idx = i; break; }
+    }
+    if (idx < 0) return;
+    measure();
+    if (!ready) { ready = true; pos = target = idx; layout(); return; }
+    if (reduced) { pos = target = idx; layout(); return; }
+    target = idx;
+    if (raf) cancelAnimationFrame(raf);
+    last = performance.now();
+    raf = requestAnimationFrame(frame);
+  }
+
+  window.__swRefresh = refresh;
+  refresh();
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { measure(); layout(); });
+  }
+  let rt = 0;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () { measure(); layout(); }, 120);
+  }, { passive: true });
+})();
 
 /* 语言切换按钮 */
 const langToggle = document.getElementById('langToggle');
@@ -3223,6 +3261,18 @@ function renderDetail(id, dir, silent) {
   const dContent = card.querySelector('.detail-content');
   const dImg = card.querySelector('.detail-content img');
   if (dContent && dImg) __loadImg(dImg, dContent, it.id);
+  // 空闲时预解相邻两件的图：下次切换直接命中已解码的位图，不会在换页瞬间卡一帧
+  const warmNeighbors = () => {
+    [prevIt, nextIt].forEach(function (x) {
+      if (!x || x.id === it.id) return;
+      const pre = new Image();
+      pre.decoding = 'async';
+      pre.src = 'assets/' + x.id + '.webp';
+      if (pre.decode) pre.decode().catch(function () {});
+    });
+  };
+  if (window.requestIdleCallback) window.requestIdleCallback(warmNeighbors, { timeout: 1500 });
+  else setTimeout(warmNeighbors, 260);
   const navEl = wrap.querySelector('.detail-nav');
   if (silent) {
     // 原地重绘（语言切换）：直接定格终态，绝不留透明/模糊的空白帧
@@ -3235,8 +3285,8 @@ function renderDetail(id, dir, silent) {
     // 乐器左右切换：卡片入场由 swapTo 控制，导航条只做极轻的淡入
     if (navEl) gsap.fromTo(navEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, delay: 0.06 });
   } else {
-    // 首次进入（从画卷点朱砂）：自下方轻推 + 去虚化淡入
-    gsap.fromTo(card, { autoAlpha: 0, y: 18, filter: 'blur(8px)' }, { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.55, ease: 'power2.out', onComplete: () => gsap.set(card, { clearProps: 'filter' }) });
+    // 首次进入（从画卷点朱砂）：自下方轻推淡入（位移/透明度，不挂大面积 blur）
+    gsap.fromTo(card, { autoAlpha: 0, y: 20, scale: 0.992 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.55, ease: 'power2.out', clearProps: 'transform' });
     if (navEl) gsap.fromTo(navEl, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.45, delay: 0.16, clearProps: 'transform' });
   }
 }
@@ -3246,9 +3296,11 @@ function swapTo(id, dir) {
   if (!byId[id]) return;
   const wrap = document.getElementById('detailWrap');
   const card = wrap && wrap.querySelector('.instrument-card');
-  if (!card || typeof gsap === 'undefined') { location.hash = '#/instrument/' + id; return; }
+  if (!card || typeof gsap === 'undefined' || prefersReduced()) { location.hash = '#/instrument/' + id; return; }
   if (wrap.dataset.swapping === '1') return;
   wrap.dataset.swapping = '1';
+  // 保险丝：异常时 1.4s 后必定解锁，避免永久锁死切换
+  setTimeout(() => { if (wrap.dataset.swapping === '1') wrap.dataset.swapping = '0'; }, 1400);
   gsap.killTweensOf(card);
   gsap.to(card, {
     autoAlpha: 0, x: dir * 44, scale: 0.985,
@@ -3313,6 +3365,8 @@ function route() {
     renderDetail(m[1]);
     showDetail.classList.add("active");
     showScroll.classList.remove("active");
+    // 进入详情：唤醒背景线波（视图可见后才能量到真实尺寸）
+    if (window.__detailWaves) { const w = window.__detailWaves; (w.release || w.wake)(); }
     // 直接进入乐器详情时，开场入场界面（文件夹/票根）与开始界面（intro）不应再遮挡，移除
     const welcomeEl = document.getElementById('welcome');
     if (welcomeEl) welcomeEl.remove();
@@ -4252,5 +4306,8 @@ activateScene(sceneKey);
 <script src="assets/koi-school.js"></script>
 <script src="assets/holo-card.js"></script>
 <script src="assets/buttons.js"></script>
+<script src="assets/detail-waves.js"></script>
+
+
 </body>
 </html>
